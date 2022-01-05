@@ -1,0 +1,169 @@
+/*block*/
+
+body {
+  margin: 0;
+  font-family: DOS, Monaco, Menlo, Consolas, "Courier New", monospace;
+  font-size: 25px;
+  line-height: 35px;
+  color: #ffffff;
+  background-color: #000084;
+}
+
+.Wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  margin: auto;
+  background: #98b6ef;
+}
+
+/*chat*/
+
+/*block*/
+
+.Chat {
+  width: 50vw;
+  padding: 10px;
+  background: #0170f8;
+  margin: 0 auto;
+  box-shadow: 10px 10px 0px 0px #1b4389;
+}
+
+.Chat header {
+  height: 30px;
+  margin-bottom: 10px;
+}
+
+.Chat-is-connected {
+  color: #ff0000;
+}
+
+.Chat-inner {
+  background: #f1f7fb;
+  height: 300px;
+  overflow: scroll;
+  color: #000;
+  border: 4px solid #b5cadf;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/*element*/
+
+.Chat-welcome {
+  margin: 10px;
+  margin-bottom: 0;
+}
+
+.Chat-code {
+  width: 300px;
+  margin: auto;
+}
+
+.Chat-code::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.Chat-code-qr {
+  float: left;
+}
+
+.Chat-code-qr img {
+  margin: 10px;
+}
+
+.Chat-code-meta {
+  float: left;
+  list-style: none;
+  padding-inline-start: 25px;
+  margin-block-start: 15px;
+}
+
+.Chat-code-meta li {
+  margin-bottom: 7px;
+}
+
+.Chat-code-meta li a {
+  text-decoration: none;
+  color: #0170f8;
+}
+
+.Chat-code-meta li img {
+  margin-right: 10px;
+  position: relative;
+  top: 7px;
+}
+
+.Chat-code-verification {
+  color: #ff0000;
+}
+
+.Chat-message {
+  color: #fff;
+  background: #3070f8;
+  display: inline-block;
+  padding: 10px 25px;
+  margin: 0px 20px 10px 20px;
+}
+
+.Chat-message:after {
+  content: "";
+  clear: both;
+}
+
+.Chat-message-outer:after {
+  content: "";
+  clear: both;
+}
+
+.Chat-message-outer.Chat-message-sender-other {
+  text-align: left;
+}
+
+.Chat-message-outer.Chat-message-sender-own {
+  text-align: right;
+}
+
+.Chat-controls:after {
+  clear: both;
+  content: "";
+}
+
+.Chat-controls textarea {
+  float: left;
+  margin: 0;
+  background-color: #f1f7fb;
+  color: #000000;
+  border: 4px solid #b5cadf;
+  width: calc(100% - 140px);
+}
+
+.Chat-controls button {
+  display: block;
+  float: left;
+  margin: 0px 0px 0px 5px;
+  padding: 4px 30px 0px 30px;
+  border: 4px solid #b5cadf;
+}
+
+.Swapchat-logo {
+  height: 30px;
+  width: 30px;
+  margin-right: 10px;
+}
+
+/*modifiers*/
+
+.Chat-header-left,
+.Chat-header-left img,
+.Chat-header-left .Chat-header-left-logotext {
+  float: left;
+}
+
+.Chat-header-right {
+  float: right;
+}
