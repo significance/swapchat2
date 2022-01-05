@@ -44,7 +44,5 @@
       "last 1 safari version"
     ]
   },
-  "devDependencies": {
-    "swapchat-engine": "file:../swapchat_engine"
-  }
+  "devDependencies": {}
 }
