@@ -62,6 +62,13 @@ body {
   margin: auto;
 }
 
+.Chat-code-copyToClipboard {
+  overflow: hidden;
+  position: absolute;
+  left: -1000px;
+  top: -1000px;
+}
+
 .Chat-code::after {
   content: "";
   display: table;

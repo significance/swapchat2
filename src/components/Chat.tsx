@@ -2,8 +2,6 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import SwapChat from "swapchat-engine";
 import QRCode from "qrcode";
 
-// document.execCommand("copy")
-
 const Chat = (props: any) => {
   const [sysConversation, setSysConversation] = useState<any>([]);
 
@@ -17,6 +15,24 @@ const Chat = (props: any) => {
       message,
     ]);
     scrollToBottom();
+  };
+
+  const codeCopyInput = useRef<HTMLInputElement>(null);
+  const copyCodeToClipboard = () => {
+    if (codeCopyInput.current) {
+      codeCopyInput.current.select();
+      document.execCommand("copy");
+      sendSysMessage("Code copied to clipboard.");
+    }
+  };
+
+  const linkCopyInput = useRef<HTMLInputElement>(null);
+  const copyLinkToClipboard = () => {
+    if (linkCopyInput.current) {
+      linkCopyInput.current.select();
+      document.execCommand("copy");
+      sendSysMessage("Link copied to clipboard.");
+    }
   };
 
   const [otherConversation, setOtherConversation] = useState<any>([]);
@@ -112,6 +128,7 @@ const Chat = (props: any) => {
 
   const [generatedToken, setGeneratedToken] = useState<string>("");
   const [connected, setConnected] = useState<boolean>(false);
+  const [secretCode, setSecretCode] = useState<string>("------");
   const [chatRole, setChatRole] = useState<string>("");
   const [didLoad, setDidLoad] = useState<boolean>(false);
 
@@ -145,10 +162,15 @@ const Chat = (props: any) => {
           setGeneratedToken(gt);
           let qrCodeData = await generateQRCode(gt);
           setCurrentQRCodeData(qrCodeData);
+          console.log(swapChat);
 
           await swapChat.waitForRespondentHandshakeChunk();
 
           sendSysMessage("Connected!");
+          console.log(swapChat);
+          if (swapChat.SecretCode !== undefined) {
+            setSecretCode(swapChat.SecretCode.toString("hex").slice(0, 6));
+          }
           setConnected(true);
         })();
       } else {
@@ -158,6 +180,10 @@ const Chat = (props: any) => {
           sendSysMessage("Type /help for help :)");
 
           sendSysMessage("Connected!");
+
+          if (swapChat.SecretCode !== undefined) {
+            setSecretCode(swapChat.SecretCode.toString("hex").slice(0, 6));
+          }
           setConnected(true);
         })();
       }
@@ -212,21 +238,25 @@ const Chat = (props: any) => {
                 <img src={currentQRCodeData} />
               </div>
               <ul className="Chat-code-meta">
-                <li className="Chat-code-verification">a7f02e</li>
+                <li className="Chat-code-verification">{secretCode}</li>
                 <li className="Chat-code-code">
-                  <a
-                    target="_blank"
-                    href={`${window.location.origin}/?token=${generatedToken}`}
-                  >
+                  <input
+                    ref={codeCopyInput}
+                    className="Chat-code-copyToClipboard"
+                    value={`${generatedToken}`}
+                  />
+                  <a onClick={copyCodeToClipboard}>
                     <img src="./copy.png" />
                     Code
                   </a>
                 </li>
                 <li className="Chat-code-link">
-                  <a
-                    target="_blank"
-                    href={`${window.location.origin}/?token=${generatedToken}`}
-                  >
+                  <input
+                    ref={linkCopyInput}
+                    className="Chat-code-copyToClipboard"
+                    value={`${window.location.origin}/?token=${generatedToken}`}
+                  />
+                  <a onClick={copyLinkToClipboard}>
                     <img src="./copy.png" />
                     Link
                   </a>
@@ -240,7 +270,7 @@ const Chat = (props: any) => {
           <div>
             <div className="Chat-welcome">** Welcome to SWAPCHAT **</div>
             <div className="Chat-code">
-              <div className="Chat-code-verification">a7f02e</div>
+              <div className="Chat-code-verification">{secretCode}</div>
             </div>
           </div>
         )}
