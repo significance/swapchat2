@@ -46,35 +46,57 @@ const Chat = (props: any) => {
     }
   };
 
+  const chatInner = useRef<HTMLDivElement>(null);
+
   const messageWasReceived = async () => {
     let messages = Array.from(swapChat.OtherPartyConversation.messages);
     await setOtherConversation(messages);
     scrollToBottom();
+    animateElement(chatInner);
   };
 
   const [ownConversation, setOwnConversation] = useState<any>([]);
 
   const parseSlashCommands = (message: string) => {
+    //display QR code big
+    //notarise on X chain
+
     if (message.indexOf("/help") === 0) {
       let helpMessage =
-        "Swapchat is brought to you by 1UP.digital and the allmighty Swarm";
+        "Swapchat is brought to you by 1UP.digital and the almighty Swarm";
       sendSysMessage(helpMessage);
-      let helpMessage2 = "Info on connection: /help connect";
-      sendSysMessage(helpMessage2);
+      let helpMessages = ["Info on connection: /help connect"];
+      helpMessages.forEach((m) => sendSysMessage(m));
       return true;
+    }
+    if (message.indexOf("/d") === 0 && message.length === 3) {
+      if (chatRole === "initiator") {
+        window.open(chatLink, "_blank");
+        return true;
+      }
     }
     return false;
   };
 
+  const animateElement = (element: any, timeout = 1000) => {
+    element.current.classList.add("animate");
+    setTimeout(() => {
+      element.current.classList.remove("animate");
+    }, timeout);
+  };
+
+  const messageSendbutton = useRef<HTMLButtonElement>(null);
+
   const [message, setMessage] = useState<string>("");
   const sendMessage = async () => {
     let didParse = parseSlashCommands(message);
-    if (didParse === false) {
+    if (didParse === false && connected === true) {
       await swapChat.send(message);
       let messages = Array.from(swapChat.OwnConversation.messages);
       await setOwnConversation(messages);
       scrollToBottom();
     }
+    animateElement(messageSendbutton);
     setMessage("");
   };
 
@@ -117,16 +139,13 @@ const Chat = (props: any) => {
     return combo.sort(orderConversation);
   }, [sysConversation, ownConversation, otherConversation]);
 
-  // const [comboConversation, setComboConversation] = useState<any>([]);
-  // const mergeCombo = () => {
-  //   setComboConversation(combo);
-  // };
-
   const [swapChat, setSwapChat] = useState<SwapChat>(
     new SwapChat(props.apiURL, props.debugURL, messageWasReceived)
   );
 
   const [generatedToken, setGeneratedToken] = useState<string>("");
+  const [chatLink, setChatLink] = useState<string>("");
+
   const [connected, setConnected] = useState<boolean>(false);
   const [secretCode, setSecretCode] = useState<string>("------");
   const [chatRole, setChatRole] = useState<string>("");
@@ -148,8 +167,14 @@ const Chat = (props: any) => {
     animateIsConnecting(i);
   };
 
+  const messageTextarea = useRef<HTMLTextAreaElement>(null);
+
   useEffect(() => {
     if (didLoad === false) {
+      if (messageTextarea.current) {
+        messageTextarea.current.focus();
+      }
+
       setDidLoad(true);
       setChatRole(props.chatRole);
       animateIsConnecting();
@@ -160,14 +185,17 @@ const Chat = (props: any) => {
 
           const gt = swapChat.getToken();
           setGeneratedToken(gt);
-          let qrCodeData = await generateQRCode(gt);
+          const cl = `${window.location.origin}/?token=${gt}`;
+          setChatLink(cl);
+
+          let qrCodeData = await generateQRCode(cl);
+
           setCurrentQRCodeData(qrCodeData);
-          console.log(swapChat);
 
           await swapChat.waitForRespondentHandshakeChunk();
 
           sendSysMessage("Connected!");
-          console.log(swapChat);
+
           if (swapChat.SecretCode !== undefined) {
             setSecretCode(swapChat.SecretCode.toString("hex").slice(0, 6));
           }
@@ -217,19 +245,19 @@ const Chat = (props: any) => {
         </div>
         {connected === true && (
           <div className="Chat-header-right">
-            <span>Connected</span>
+            <span className="Chat-header-connect-feedback">Connected</span>
             <span className="Chat-is-connected"> * </span>
           </div>
         )}
         {connected === false && (
           <div className="Chat-header-right">
-            <span>Connecting</span>
+            <span className="Chat-header-connect-feedback">Connecting</span>
             <span className="Chat-is-connecting"> {isConnectingAnimation}</span>
           </div>
         )}
       </header>
 
-      <div className="Chat-inner">
+      <div className="Chat-inner" ref={chatInner}>
         {chatRole == "initiator" && (
           <div>
             <div className="Chat-welcome">** Welcome to SWAPCHAT **</div>
@@ -254,7 +282,7 @@ const Chat = (props: any) => {
                   <input
                     ref={linkCopyInput}
                     className="Chat-code-copyToClipboard"
-                    value={`${window.location.origin}/?token=${generatedToken}`}
+                    value={chatLink}
                   />
                   <a onClick={copyLinkToClipboard}>
                     <img src="./copy.png" />
@@ -292,12 +320,15 @@ const Chat = (props: any) => {
 
       <div className="Chat-controls">
         <textarea
+          ref={messageTextarea}
           rows={1}
           onChange={(e) => setMessage(e.target.value)}
           onKeyUp={handleTextareaKeyup}
           value={message}
         />
-        <button onClick={sendMessage}>Send</button>
+        <button ref={messageSendbutton} onClick={sendMessage}>
+          Send
+        </button>
       </div>
     </div>
   );
