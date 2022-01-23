@@ -22,6 +22,7 @@ const Chat = (props: any) => {
     if (codeCopyInput.current) {
       codeCopyInput.current.select();
       document.execCommand("copy");
+      focusTextbox();
       sendSysMessage("Code copied to clipboard.");
     }
   };
@@ -31,6 +32,7 @@ const Chat = (props: any) => {
     if (linkCopyInput.current) {
       linkCopyInput.current.select();
       document.execCommand("copy");
+      focusTextbox();
       sendSysMessage("Link copied to clipboard.");
     }
   };
@@ -55,18 +57,115 @@ const Chat = (props: any) => {
     animateElement(chatInner);
   };
 
+  const didAcceptTerms = () => {
+    return localStorage.getItem("didAcceptTerms") === "true";
+  };
+
+  const acceptTerms = () => {
+    localStorage.setItem("didAcceptTerms", "true");
+    sendSysMessage("Terms accepted. Thanks for chatting with Swapchat! :)");
+  };
+
+  const clearConversations = () => {
+    setOwnConversation([]);
+    setOtherConversation([]);
+    setSysConversation([]);
+  };
+
   const [ownConversation, setOwnConversation] = useState<any>([]);
 
   const parseSlashCommands = (message: string) => {
     //display QR code big
     //notarise on X chain
-
+    if (message.indexOf("/clear") === 0) {
+      clearConversations();
+      return true;
+    }
+    if (message.indexOf("/respond") === 0) {
+      if (chatRole === "respondent") {
+        return true;
+      }
+      setChatRole(props.chatRole);
+      clearConversations();
+      let sc = new SwapChat(
+        props.apiURL,
+        props.debugURL,
+        messageWasReceived,
+        props.gatewayMode
+      );
+      respond(sc, message.split(" ")[1].trim());
+      setSwapChat(sc);
+      return true;
+    }
+    if (message.indexOf("/copy code") === 0) {
+      if (chatRole === "respondent") {
+        return true;
+      }
+      copyCodeToClipboard();
+      return true;
+    }
+    if (message.indexOf("/copy link") === 0) {
+      if (chatRole === "respondent") {
+        return true;
+      }
+      copyLinkToClipboard();
+      return true;
+    }
+    if (message.indexOf("/terms accept") === 0 || message.indexOf("/a") === 0) {
+      acceptTerms();
+      return true;
+    }
+    if (message.indexOf("/terms view") === 0) {
+      window.open("/terms-and-conditions.txt", "_blank");
+      return true;
+    }
+    if (message.indexOf("/help connect") === 0) {
+      let helpMessages = [
+        "Scan the QR code above or send the link to the recipient device to connect.",
+        "Copy link: /copy link",
+        "Copy code: /copy code",
+      ];
+      helpMessages.forEach((m) => sendSysMessage(m));
+      return true;
+    }
     if (message.indexOf("/help") === 0) {
       let helpMessage =
         "Swapchat is brought to you by 1UP.digital and the almighty Swarm";
       sendSysMessage(helpMessage);
-      let helpMessages = ["Info on connection: /help connect"];
+      let helpMessages = [
+        "View terms: /terms view",
+        "Accept terms: /terms accept (/a)",
+        "Help with connection: /help connect",
+        "View useful links: /links",
+        "Clear messages: /clear",
+      ];
       helpMessages.forEach((m) => sendSysMessage(m));
+      return true;
+    }
+    if (message.indexOf("/links") === 0) {
+      let helpMessages = [
+        "Swarm: /links swarm",
+        "1UP: /links 1UP",
+        "View code on Github: /links source",
+        "View lib on Github: /links engine",
+      ];
+      helpMessages.forEach((m) => sendSysMessage(m));
+      return true;
+    }
+    if (message.indexOf("/links swarm") === 0) {
+      window.open("https://ethswarm.org", "_blank");
+      return true;
+    }
+    if (message.indexOf("/links 1UP") === 0) {
+      window.open("https://1up.digital", "_blank");
+      return true;
+    }
+    if (message.indexOf("/links source") === 0) {
+      window.open("https://github.com/signficance/swapchat2", "_blank");
+      return true;
+    }
+    if (message.indexOf("/links engine") === 0) {
+      window.open("https://github.com/signficance/swapchat-engine", "_blank");
       return true;
     }
     if (message.indexOf("/d") === 0 && message.length === 3) {
@@ -74,6 +173,9 @@ const Chat = (props: any) => {
         window.open(chatLink, "_blank");
         return true;
       }
+    }
+    if (message.indexOf("/") === 0) {
+      return true;
     }
     return false;
   };
@@ -90,7 +192,42 @@ const Chat = (props: any) => {
   const [message, setMessage] = useState<string>("");
   const sendMessage = async () => {
     let didParse = parseSlashCommands(message);
-    if (didParse === false && connected === true) {
+    if (didAcceptTerms() !== true) {
+      let helpMessages = [
+        "You must accept the Terms and Conditions to proceed.",
+        "View terms: /terms view",
+        "Accept terms: /terms accept",
+      ];
+      helpMessages.forEach((m) => sendSysMessage(m));
+    }
+    if (
+      didAcceptTerms() === true &&
+      didParse === false &&
+      connected !== true &&
+      props.chatRole === "initiator"
+    ) {
+      let helpMessages = [
+        "The recipient must connect.",
+        "Copy link: /copy link",
+        "Copy code: /copy code",
+      ];
+      helpMessages.forEach((m) => sendSysMessage(m));
+    }
+    if (
+      didAcceptTerms() === true &&
+      didParse === false &&
+      connected !== true &&
+      props.chatRole === "respondent"
+    ) {
+      let helpMessages = ["Waiting to connect to initiator."];
+      helpMessages.forEach((m) => sendSysMessage(m));
+    }
+    if (
+      didAcceptTerms() === true &&
+      didParse === false &&
+      connected === true &&
+      message !== ""
+    ) {
       await swapChat.send(message);
       let messages = Array.from(swapChat.OwnConversation.messages);
       await setOwnConversation(messages);
@@ -140,7 +277,12 @@ const Chat = (props: any) => {
   }, [sysConversation, ownConversation, otherConversation]);
 
   const [swapChat, setSwapChat] = useState<SwapChat>(
-    new SwapChat(props.apiURL, props.debugURL, messageWasReceived)
+    new SwapChat(
+      props.apiURL,
+      props.debugURL,
+      messageWasReceived,
+      props.gatewayMode
+    )
   );
 
   const [generatedToken, setGeneratedToken] = useState<string>("");
@@ -168,23 +310,52 @@ const Chat = (props: any) => {
   };
 
   const messageTextarea = useRef<HTMLTextAreaElement>(null);
+  const focusTextbox = () => {
+    if (messageTextarea.current) {
+      messageTextarea.current.focus();
+    }
+  };
+
+  const respond = async (swapChat: any, token: string) => {
+    swapChat.respond(token);
+    await swapChat.waitForInitiatorHandshakeChunk();
+    sendSysMessage("Type /help for help :)");
+
+    sendSysMessage("Connected!");
+
+    if (swapChat.SecretCode !== undefined) {
+      setSecretCode(swapChat.SecretCode.toString("hex").slice(0, 6));
+    }
+    setConnected(true);
+  };
 
   useEffect(() => {
+    let role;
     if (didLoad === false) {
-      if (messageTextarea.current) {
-        messageTextarea.current.focus();
+      focusTextbox();
+
+      role = props.chatRole;
+      setChatRole(role);
+
+      //fix because mobile safari, brave and chrome vh differ
+      if (chatInner.current) {
+        if (window.innerWidth < 600) {
+          chatInner.current.style.height = `${
+            document.documentElement.clientHeight - 122
+          }px`;
+        }
       }
 
       setDidLoad(true);
-      setChatRole(props.chatRole);
       animateIsConnecting();
-      if (props.chatRole === "initiator") {
+      if (role === "initiator") {
         (async () => {
           sendSysMessage("Type /help for help :)");
           await swapChat.initiate();
 
           const gt = swapChat.getToken();
           setGeneratedToken(gt);
+
           const cl = `${window.location.origin}/?token=${gt}`;
           setChatLink(cl);
 
@@ -202,18 +373,7 @@ const Chat = (props: any) => {
           setConnected(true);
         })();
       } else {
-        (async () => {
-          swapChat.respond(props.token);
-          await swapChat.waitForInitiatorHandshakeChunk();
-          sendSysMessage("Type /help for help :)");
-
-          sendSysMessage("Connected!");
-
-          if (swapChat.SecretCode !== undefined) {
-            setSecretCode(swapChat.SecretCode.toString("hex").slice(0, 6));
-          }
-          setConnected(true);
-        })();
+        respond(swapChat, props.token);
       }
     }
   });
@@ -269,6 +429,7 @@ const Chat = (props: any) => {
                 <li className="Chat-code-verification">{secretCode}</li>
                 <li className="Chat-code-code">
                   <input
+                    readOnly
                     ref={codeCopyInput}
                     className="Chat-code-copyToClipboard"
                     value={`${generatedToken}`}
@@ -280,6 +441,7 @@ const Chat = (props: any) => {
                 </li>
                 <li className="Chat-code-link">
                   <input
+                    readOnly
                     ref={linkCopyInput}
                     className="Chat-code-copyToClipboard"
                     value={chatLink}
@@ -307,6 +469,7 @@ const Chat = (props: any) => {
           {comboConversation.map((message: any, index: any) => {
             return (
               <div
+                key={index}
                 className={`Chat-message-outer Chat-message-sender-${message.sender}`}
               >
                 <div key={index} className={"Chat-message"}>

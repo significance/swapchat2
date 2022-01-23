@@ -7,11 +7,9 @@ import { useLocation } from "react-router-dom";
 
 import Chat from "./components/Chat";
 
-// const apiURL = "https://bee-9.gateway.ethswarm.org";
-// const debugURL = "https://bee-9.gateway.ethswarm.org";
-
-const apiURL = "http://localhost:1633";
-const debugURL = "http://localhost:1635";
+const apiURL = process.env.REACT_APP_BEE_API;
+const debugURL = process.env.REACT_APP_BEE_DEBUG_API;
+const gatewayMode = process.env.REACT_APP_BEE_GATEWAY_MODE === "true";
 
 function App() {
   const search = useLocation().search;
@@ -25,6 +23,7 @@ function App() {
         token={token}
         apiURL={apiURL}
         debugURL={debugURL}
+        gatewayMode={gatewayMode}
       />
     </div>
   );

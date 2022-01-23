@@ -1,0 +1,14 @@
+SWAPCHAT USER TESTING TERMS AND CONDITIONS (JAN 2022)
+Welcome to Swapchat, currently being developed and graciously provided by the 1up.digital. Swarm is a peer-to-peer network of nodes that collectively provide a decentralized storage and communication service. Swapchat is currently provided for testing purposes only.
+
+By testing Swapchat, you accept the following terms:
+
+We make, at our sole discretion, Swapchat available to you at no charge. You may choose to try Swapchat at your sole discretion. Swapchat testing is intended for evaluation purposes only and not for production use. It is currently not supported.
+
+Data storage and transfer through Swapchat is not encrypted. Data storage through Swapchat is not guaranteed in time and data may thus disappear, respectively be erased, at any time. Data storage through Swapchat is decentralized and data can thus be stored in any jurisdiction by any peer user (node operator).
+
+In addition, for the testing of Swapchat, you agree to not upload and transfer personal data and data that contain legally protected contents (including professional secrets). You agree to not use Swapchat in a way that threatens the security, integrity or availability of the service. In particular, you shall not use Swapchat to (i) store and/or transfer infringing, libelous, or otherwise unlawful or tortious material, (ii) store and/or transfer material in violation of third-party privacy rights, (iii) store and/or transfer malicious code, (iv) interfere with or disrupt the integrity or performance of any third-party service or data. You are solely responsible for the uploaded and downloaded files. You may only upload and/or transfer files that belong to you and/or that you are explicitly authorized to upload and/or transfer. You agree to defend, indemnify and hold harmless Swarm, as well as any and all persons involved in the provision of Swapchat with respect to all claims, demands, liabilities, costs and/or expenses resulting from an illegal use of Swapchat or its content.
+
+You acknowledge that Swapchat is not free from bugs or errors and that Swarm bears no liability for any harm or damage arising out of or in connection with Swapchat. We may discontinue Swapchat at any time at our sole discretion. When testing Swapchat, you acknowledge that we instantly and remotely collect statistical information about your actions and consent thereto. You grant us and our affiliates a worldwide, perpetual, irrevocable, royalty-free license to use and incorporate into our services any suggestion, enhancement request, recommendation, correction or other feedback provided by you relating to the operation of our services.
+
+We reserve the right to modify these User Testing Terms and Conditions at any time. These User Testing Terms and Conditions are governed by and construed in accordance with British law, without giving effect to its conflict of laws provisions.
