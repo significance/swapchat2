@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import SwapChat from "swapchat-engine";
+import SwapChat from "swapchat";
 import QRCode from "qrcode";
 
 const Chat = (props: any) => {
