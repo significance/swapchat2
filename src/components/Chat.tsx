@@ -18,7 +18,10 @@ const Chat = (props: any) => {
   };
 
   const codeCopyInput = useRef<HTMLInputElement>(null);
-  const copyCodeToClipboard = () => {
+  const copyCodeToClipboard = (e: any) => {
+    if (e !== false) {
+      e.preventDefault();
+    }
     if (codeCopyInput.current) {
       codeCopyInput.current.select();
       document.execCommand("copy");
@@ -28,7 +31,10 @@ const Chat = (props: any) => {
   };
 
   const linkCopyInput = useRef<HTMLInputElement>(null);
-  const copyLinkToClipboard = () => {
+  const copyLinkToClipboard = (e: any) => {
+    if (e !== false) {
+      e.preventDefault();
+    }
     if (linkCopyInput.current) {
       linkCopyInput.current.select();
       document.execCommand("copy");
@@ -85,14 +91,14 @@ const Chat = (props: any) => {
       if (chatRole === "respondent") {
         return true;
       }
-      copyCodeToClipboard();
+      copyCodeToClipboard(false);
       return true;
     }
     if (message.indexOf("/copy link") === 0) {
       if (chatRole === "respondent") {
         return true;
       }
-      copyLinkToClipboard();
+      copyLinkToClipboard(false);
       return true;
     }
     if (message.indexOf("/terms accept") === 0 || message.indexOf("/a") === 0) {
@@ -413,7 +419,10 @@ const Chat = (props: any) => {
                     className="Chat-code-copyToClipboard"
                     value={`${generatedToken}`}
                   />
-                  <a onClick={copyCodeToClipboard}>
+                  <a
+                    onClick={(e) => copyCodeToClipboard(e)}
+                    href={generatedToken}
+                  >
                     <img src="./copy.png" />
                     Code
                   </a>
@@ -425,7 +434,7 @@ const Chat = (props: any) => {
                     className="Chat-code-copyToClipboard"
                     value={chatLink}
                   />
-                  <a onClick={copyLinkToClipboard}>
+                  <a onClick={(e) => copyLinkToClipboard(e)} href={chatLink}>
                     <img src="./copy.png" />
                     Link
                   </a>
