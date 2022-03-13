@@ -24,7 +24,7 @@ jobs:
           postage-batch-id: ${{ secrets.POSTAGE_BATCH_ID }}
           bee-url: ${{ secrets.BEE_URL }}
           headers: |
-            Authorization: Basic ${{ secrets.API_TOKEN }}
+            authorization: ${{ secrets.API_TOKEN }}
 
       - uses: ethersphere/swarm-actions/write-feed@v0
         id: feed
