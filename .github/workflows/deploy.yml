@@ -21,13 +21,21 @@ jobs:
         with:
           dir: ./build
           index-document: index.html
+          postage-batch-id: ${{ secrets.POSTAGE_BATCH_ID }}
+          bee-url: ${{ secrets.BEE_URL }}
+          headers: |
+            Authorization: Basic ${{ secrets.API_TOKEN }}
 
       - uses: ethersphere/swarm-actions/write-feed@v0
         id: feed
         with:
           reference: ${{ steps.upload.outputs.reference }}
-          topic: "swarm-actions-test"
+          topic: "swapchat2"
+          postage-batch-id: ${{ secrets.POSTAGE_BATCH_ID }}
+          bee-url: ${{ secrets.BEE_URL }}
           signer: ${{ secrets.SIGNER }}
+          headers: |
+            Authorization: Basic ${{ secrets.API_TOKEN }}
 
       - uses: ethersphere/swarm-actions/reference-to-cid@v0
         id: cid
