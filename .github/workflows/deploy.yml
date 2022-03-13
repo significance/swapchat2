@@ -23,6 +23,7 @@ jobs:
           index-document: index.html
           postage-batch-id: ${{ secrets.POSTAGE_BATCH_ID }}
           bee-url: ${{ secrets.BEE_URL }}
+          timeout: 300000
           headers: |
             authorization: ${{ secrets.API_TOKEN }}
 
