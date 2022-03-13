@@ -1,0 +1,41 @@
+name: "build-test"
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "14"
+
+      - run: yarn
+      - run: yarn build
+
+      - uses: ethersphere/swarm-actions/upload-dir@v0
+        id: upload
+        with:
+          dir: ./build
+          index-document: index.html
+
+      - uses: ethersphere/swarm-actions/write-feed@v0
+        id: feed
+        with:
+          reference: ${{ steps.upload.outputs.reference }}
+          topic: "swarm-actions-test"
+          signer: ${{ secrets.SIGNER }}
+
+      - uses: ethersphere/swarm-actions/reference-to-cid@v0
+        id: cid
+        with:
+          reference: ${{ steps.feed.outputs.manifest }}
+
+      - run: |
+          echo 'Chunk Reference: ${{ steps.upload.outputs.reference }}'
+          echo 'Feed Reference: ${{ steps.feed.outputs.reference }}'
+          echo 'Feed Manifest: ${{ steps.feed.outputs.manifest }}'
+          echo 'Feed Bzz.link: https://${{ steps.cid.outputs.cid }}.bzz.link'
