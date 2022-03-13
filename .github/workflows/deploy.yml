@@ -35,7 +35,7 @@ jobs:
           bee-url: ${{ secrets.BEE_URL }}
           signer: ${{ secrets.SIGNER }}
           headers: |
-            Authorization: Basic ${{ secrets.API_TOKEN }}
+            authorization: ${{ secrets.API_TOKEN }}
 
       - uses: ethersphere/swarm-actions/reference-to-cid@v0
         id: cid
