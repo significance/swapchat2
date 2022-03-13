@@ -266,7 +266,7 @@ const Chat = (props: any) => {
     return combo.sort(orderConversation);
   }, [sysConversation, ownConversation, otherConversation]);
 
-  const [swapChat, setSwapChat] = useState<SwapChat>(
+  const [swapChat] = useState<SwapChat>(
     new SwapChat(
       props.apiURL,
       props.debugURL,
@@ -306,62 +306,66 @@ const Chat = (props: any) => {
     }
   };
 
-  useEffect(() => {
-    if (didLoad === false) {
-      focusTextbox();
+  useEffect(
+    () => {
+      if (didLoad === false) {
+        focusTextbox();
 
-      //fix because mobile safari, brave and chrome vh differ
-      if (chatInner.current) {
-        if (window.innerWidth < 600) {
-          chatInner.current.style.height = `${
-            document.documentElement.clientHeight - 122
-          }px`;
+        //fix because mobile safari, brave and chrome vh differ
+        if (chatInner.current) {
+          if (window.innerWidth < 600) {
+            chatInner.current.style.height = `${
+              document.documentElement.clientHeight - 122
+            }px`;
+          }
+        }
+
+        setDidLoad(true);
+        setChatRole(props.chatRole);
+        animateIsConnecting();
+        if (props.chatRole === "initiator") {
+          (async () => {
+            sendSysMessage("Type /help for help :)");
+            await swapChat.initiate();
+
+            const gt = swapChat.getToken();
+            setGeneratedToken(gt);
+
+            const cl = `${window.location.origin}/?token=${gt}`;
+            setChatLink(cl);
+
+            let qrCodeData = await generateQRCode(cl);
+
+            setCurrentQRCodeData(qrCodeData);
+
+            await swapChat.waitForRespondentHandshakeChunk();
+
+            sendSysMessage("Connected!");
+
+            if (swapChat.SecretCode !== undefined) {
+              setSecretCode(swapChat.SecretCode.toString("hex").slice(0, 6));
+            }
+            setConnected(true);
+          })();
+        } else {
+          (async () => {
+            swapChat.respond(props.token);
+            await swapChat.waitForInitiatorHandshakeChunk();
+            sendSysMessage("Type /help for help :)");
+
+            sendSysMessage("Connected!");
+
+            if (swapChat.SecretCode !== undefined) {
+              setSecretCode(swapChat.SecretCode.toString("hex").slice(0, 6));
+            }
+            setConnected(true);
+          })();
         }
       }
-
-      setDidLoad(true);
-      setChatRole(props.chatRole);
-      animateIsConnecting();
-      if (props.chatRole === "initiator") {
-        (async () => {
-          sendSysMessage("Type /help for help :)");
-          await swapChat.initiate();
-
-          const gt = swapChat.getToken();
-          setGeneratedToken(gt);
-
-          const cl = `${window.location.origin}/?token=${gt}`;
-          setChatLink(cl);
-
-          let qrCodeData = await generateQRCode(cl);
-
-          setCurrentQRCodeData(qrCodeData);
-
-          await swapChat.waitForRespondentHandshakeChunk();
-
-          sendSysMessage("Connected!");
-
-          if (swapChat.SecretCode !== undefined) {
-            setSecretCode(swapChat.SecretCode.toString("hex").slice(0, 6));
-          }
-          setConnected(true);
-        })();
-      } else {
-        (async () => {
-          swapChat.respond(props.token);
-          await swapChat.waitForInitiatorHandshakeChunk();
-          sendSysMessage("Type /help for help :)");
-
-          sendSysMessage("Connected!");
-
-          if (swapChat.SecretCode !== undefined) {
-            setSecretCode(swapChat.SecretCode.toString("hex").slice(0, 6));
-          }
-          setConnected(true);
-        })();
-      }
-    }
-  });
+    },
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   const generateQRCode = (link: string): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -385,7 +389,7 @@ const Chat = (props: any) => {
     <div className="Chat">
       <header>
         <div className="Chat-header-left">
-          <img className="Swapchat-logo" src="./swapchat3.png" />
+          <img className="Swapchat-logo" alt="swapchat" src="./swapchat3.png" />
           <div className="Chat-header-left-logotext">SwapChat 2.0</div>
         </div>
         {connected === true && (
@@ -403,12 +407,12 @@ const Chat = (props: any) => {
       </header>
 
       <div className="Chat-inner" ref={chatInner}>
-        {chatRole == "initiator" && (
+        {chatRole === "initiator" && (
           <div>
             <div className="Chat-welcome">** Welcome to SWAPCHAT **</div>
             <div className="Chat-code">
               <div className="Chat-code-qr">
-                <img src={currentQRCodeData} />
+                <img alt="qr code" src={currentQRCodeData} />
               </div>
               <ul className="Chat-code-meta">
                 <li className="Chat-code-verification">{secretCode}</li>
@@ -423,7 +427,7 @@ const Chat = (props: any) => {
                     onClick={(e) => copyCodeToClipboard(e)}
                     href={generatedToken}
                   >
-                    <img src="./copy.png" />
+                    <img alt="copy code" src="./copy.png" />
                     Code
                   </a>
                 </li>
@@ -435,7 +439,7 @@ const Chat = (props: any) => {
                     value={chatLink}
                   />
                   <a onClick={(e) => copyLinkToClipboard(e)} href={chatLink}>
-                    <img src="./copy.png" />
+                    <img alt="copy link" src="./copy.png" />
                     Link
                   </a>
                 </li>
@@ -444,7 +448,7 @@ const Chat = (props: any) => {
           </div>
         )}
 
-        {chatRole == "respondent" && (
+        {chatRole === "respondent" && (
           <div>
             <div className="Chat-welcome">** Welcome to SWAPCHAT **</div>
             <div className="Chat-code">
