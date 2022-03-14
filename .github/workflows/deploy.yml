@@ -36,7 +36,7 @@ jobs:
         id: feed
         with:
           reference: ${{ steps.upload.outputs.reference }}
-          topic: "swapchat2"
+          topic: "swapchat2-main"
           postage-batch-id: ${{ secrets.POSTAGE_BATCH_ID }}
           bee-url: ${{ secrets.BEE_URL }}
           signer: ${{ secrets.SIGNER }}
