@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import SwapChat from "swapchat";
 import QRCode from "qrcode";
 
+const POLL_TIMEOUT = 5000;
+
 const Chat = (props: any) => {
   const [sysConversation, setSysConversation] = useState<any>([]);
 
@@ -271,7 +273,8 @@ const Chat = (props: any) => {
       props.apiURL,
       props.debugURL,
       messageWasReceived,
-      props.gatewayMode
+      props.gatewayMode,
+      POLL_TIMEOUT
     )
   );
 
