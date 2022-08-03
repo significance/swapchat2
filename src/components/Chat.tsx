@@ -122,7 +122,7 @@ const Chat = (props: any) => {
     }
     if (message.indexOf("/help") === 0) {
       let helpMessage =
-        "Swapchat is brought to you by 1UP.digital and the almighty Swarm";
+        "Swapchat is brought to you by 1UP.digital and the almighty Swarm.";
       sendSysMessage(helpMessage);
       let helpMessages = [
         "View terms: /terms view",
