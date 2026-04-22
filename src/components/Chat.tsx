@@ -268,15 +268,18 @@ const Chat = (props: any) => {
     return combo.sort(orderConversation);
   }, [sysConversation, ownConversation, otherConversation]);
 
-  const [swapChat] = useState<SwapChat>(
-    new SwapChat(
+  const [swapChat] = useState<SwapChat>(() => {
+    const sc = new SwapChat(
       props.apiURL,
-      props.debugURL,
       messageWasReceived,
       props.gatewayMode,
       POLL_TIMEOUT
-    )
-  );
+    );
+    if (props.stamp) {
+      sc.BatchID = props.stamp;
+    }
+    return sc;
+  });
 
   const [generatedToken, setGeneratedToken] = useState<string>("");
   const [chatLink, setChatLink] = useState<string>("");
