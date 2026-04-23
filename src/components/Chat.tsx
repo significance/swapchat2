@@ -137,6 +137,7 @@ const Chat = (props: any) => {
         ] : []),
         "Help with connection: /help connect",
         "View useful links: /links",
+        "Fullscreen QR code: /qr",
         "Clear messages: /clear",
       ];
       helpMessages.forEach((m) => sendSysMessage(m));
@@ -166,6 +167,16 @@ const Chat = (props: any) => {
     }
     if (message.indexOf("/links engine") === 0) {
       window.open("https://github.com/signficance/swapchat-engine", "_blank");
+      return true;
+    }
+    if (message.indexOf("/qr") === 0) {
+      if (chatRole === "initiator" && chatLink) {
+        (async () => {
+          const bigQR = await generateQRCode(chatLink, 500, "#0170f8");
+          setFullscreenQRData(bigQR);
+          setShowFullscreenQR(true);
+        })();
+      }
       return true;
     }
     if (message.indexOf("/d") === 0 && message.length === 3) {
@@ -306,6 +317,8 @@ const Chat = (props: any) => {
   const [didLoad, setDidLoad] = useState<boolean>(false);
 
   const [currentQRCodeData, setCurrentQRCodeData] = useState("");
+  const [fullscreenQRData, setFullscreenQRData] = useState("");
+  const [showFullscreenQR, setShowFullscreenQR] = useState(false);
 
   const [isConnectingAnimation, setIsConnectingAnimation] = useState("");
 
@@ -389,14 +402,14 @@ const Chat = (props: any) => {
     []
   );
 
-  const generateQRCode = (link: string): Promise<string> => {
+  const generateQRCode = (link: string, width = 150, dark = "#000000"): Promise<string> => {
     return new Promise((resolve, reject) => {
       var opts = {
         errorCorrectionLevel: "L" as const,
         margin: 0,
-        width: 150,
+        width: width,
         color: {
-          dark: "#000000",
+          dark: dark,
           light: "#FFFFFF",
         },
       };
@@ -409,6 +422,17 @@ const Chat = (props: any) => {
 
   return (
     <div className="Chat">
+      {showFullscreenQR && (
+        <div
+          className="QR-fullscreen"
+          tabIndex={0}
+          ref={(el) => el?.focus()}
+          onKeyDown={() => { setShowFullscreenQR(false); focusTextbox(); }}
+          onClick={() => { setShowFullscreenQR(false); focusTextbox(); }}
+        >
+          <img alt="qr code fullscreen" src={fullscreenQRData} />
+        </div>
+      )}
       <header>
         <div className="Chat-header-left">
           <img className="Swapchat-logo" alt="swapchat" src="./swapchat3.png" />

@@ -25,6 +25,7 @@ body {
   background: #0170f8;
   margin: 0 auto;
   box-shadow: 10px 10px 0px 0px #1b4389;
+  position: relative;
 }
 
 .Chat header {
@@ -248,6 +249,29 @@ body {
     float: left;
     width: calc(100% - 171px);
   }
+}
+
+/*fullscreen qr*/
+
+.QR-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #98b6ef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  cursor: pointer;
+  outline: none;
+}
+
+.QR-fullscreen img {
+  max-width: 90%;
+  max-height: 90%;
+  image-rendering: pixelated;
 }
 
 /*animation*/

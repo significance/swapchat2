@@ -71,4 +71,14 @@ test.describe('slash commands', () => {
     const own = await page.getOwnMessages();
     expect(own).not.toContain('/nonexistent');
   });
+
+  test('/qr shows fullscreen QR overlay and dismisses on keypress', async ({ browser }) => {
+    ({ page, context } = await setupInitiator(browser));
+    await page.getToken(); // wait for token to exist
+    await page.sendMessage('/qr');
+    await expect(page.raw.locator('.QR-fullscreen')).toBeVisible({ timeout: 5_000 });
+    await expect(page.raw.locator('.QR-fullscreen img')).toBeVisible();
+    await page.raw.locator('.QR-fullscreen').press('Escape');
+    await expect(page.raw.locator('.QR-fullscreen')).not.toBeVisible({ timeout: 2_000 });
+  });
 });
