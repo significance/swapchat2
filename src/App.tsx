@@ -12,7 +12,7 @@ const stamp = import.meta.env.VITE_BEE_STAMP;
 function App() {
   const search = useLocation().search;
   const token = new URLSearchParams(search).get("token");
-  const chatRole = token && token.length === 194 ? "respondent" : "initiator";
+  const chatRole = token && token.length === 1708 ? "respondent" : "initiator";
 
   return (
     <div className="Wrapper">

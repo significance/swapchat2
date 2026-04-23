@@ -51,12 +51,14 @@ const Chat = (props: any) => {
   const chatModal = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
-    if (chatModal.current) {
-      let messages = chatModal.current.getElementsByClassName("Chat-message");
-      if (messages.length > 0) {
-        messages[messages.length - 1].scrollIntoView();
+    setTimeout(() => {
+      if (chatModal.current) {
+        let messages = chatModal.current.getElementsByClassName("Chat-message");
+        if (messages.length > 0) {
+          messages[messages.length - 1].scrollIntoView();
+        }
       }
-    }
+    }, 50);
   };
 
   const chatInner = useRef<HTMLDivElement>(null);
@@ -126,7 +128,7 @@ const Chat = (props: any) => {
     }
     if (message.indexOf("/help") === 0) {
       let helpMessage =
-        "Swapchat is brought to you by 1UP.digital and the almighty Swarm.";
+        "Swapchat is brought to you by 1UP.digital and the irrepressible Swarm.";
       sendSysMessage(helpMessage);
       let helpMessages = [
         ...(REQUIRE_TERMS ? [
@@ -238,6 +240,14 @@ const Chat = (props: any) => {
   const handleTextareaKeyup = (e: any) => {
     if (e.key === "Enter") {
       sendMessage();
+    }
+    if (e.key === "PageUp" && chatInner.current) {
+      e.preventDefault();
+      chatInner.current.scrollTop -= chatInner.current.clientHeight;
+    }
+    if (e.key === "PageDown" && chatInner.current) {
+      e.preventDefault();
+      chatInner.current.scrollTop += chatInner.current.clientHeight;
     }
   };
 
@@ -382,7 +392,7 @@ const Chat = (props: any) => {
   const generateQRCode = (link: string): Promise<string> => {
     return new Promise((resolve, reject) => {
       var opts = {
-        quality: 0.3,
+        errorCorrectionLevel: "L" as const,
         margin: 0,
         width: 150,
         color: {
