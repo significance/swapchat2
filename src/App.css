@@ -303,6 +303,36 @@ body {
   margin-top: 20px;
 }
 
+.Terms-reader {
+  max-width: 600px;
+  text-align: left;
+}
+
+.Terms-reader-text {
+  font-size: 16px;
+  line-height: 26px;
+  color: #d0d0d0;
+  white-space: pre-wrap;
+  margin-bottom: 30px;
+}
+
+.Terms-reader-nav {
+  font-size: 16px;
+  line-height: 26px;
+  color: #6080c0;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.Terms-reader .Terms-prompt {
+  display: block;
+  text-align: center;
+}
+
+.Terms-reader .Terms-hint {
+  text-align: center;
+}
+
 /*fullscreen qr*/
 
 .QR-fullscreen {

@@ -73,6 +73,15 @@ const Chat = (props: any) => {
   const [showTermsScreen, setShowTermsScreen] = useState(
     REQUIRE_TERMS && localStorage.getItem("didAcceptTerms") !== "true"
   );
+  const [termsReadMode, setTermsReadMode] = useState(false);
+  const [termsPage, setTermsPage] = useState(0);
+
+  const termsPages = [
+    "SWAPCHAT USER TESTING TERMS AND CONDITIONS (JAN 2022)\n\nWelcome to Swapchat, currently being developed and graciously provided by the 1up.digital. Swarm is a peer-to-peer network of nodes that collectively provide a decentralized storage and communication service. Swapchat is currently provided for testing purposes only.\n\nBy testing Swapchat, you accept the following terms:",
+    "We make, at our sole discretion, Swapchat available to you at no charge. You may choose to try Swapchat at your sole discretion. Swapchat testing is intended for evaluation purposes only and not for production use. It is currently not supported.\n\nData storage and transfer through Swapchat is not encrypted. Data storage through Swapchat is not guaranteed in time and data may thus disappear, respectively be erased, at any time.",
+    "You agree to not upload and transfer personal data and data that contain legally protected contents. You agree to not use Swapchat in a way that threatens the security, integrity or availability of the service.\n\nYou are solely responsible for the uploaded and downloaded files. You may only upload and/or transfer files that belong to you and/or that you are explicitly authorized to upload and/or transfer.",
+    "You acknowledge that Swapchat is not free from bugs or errors and that Swarm bears no liability for any harm or damage arising out of or in connection with Swapchat.\n\nWe reserve the right to modify these User Testing Terms and Conditions at any time. These terms are governed by British law.",
+  ];
 
   const clearConversations = () => {
     setOwnConversation([]);
@@ -402,25 +411,59 @@ const Chat = (props: any) => {
           onKeyDown={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (e.key === "y" || e.key === "Y") {
-              localStorage.setItem("didAcceptTerms", "true");
-              setShowTermsScreen(false);
-              setTimeout(() => focusTextbox(), 50);
-            }
-            if (e.key === "r" || e.key === "R") {
-              window.open("https://github.com/signficance/swapchat2/blob/master/public/terms-and-conditions.txt", "_blank");
-            }
-            if (e.key === "n" || e.key === "N") {
-              window.open("https://www.youtube.com/watch?v=lAkuJXGldrM", "_blank");
+            if (termsReadMode) {
+              if ((e.key === " " || e.key === "Enter" || e.key === "ArrowRight" || e.key === "PageDown") && termsPage < termsPages.length - 1) {
+                setTermsPage(termsPage + 1);
+              } else if ((e.key === "ArrowLeft" || e.key === "PageUp") && termsPage > 0) {
+                setTermsPage(termsPage - 1);
+              } else if (e.key === "y" || e.key === "Y") {
+                localStorage.setItem("didAcceptTerms", "true");
+                setShowTermsScreen(false);
+                setTimeout(() => focusTextbox(), 50);
+              } else if (e.key === "n" || e.key === "N") {
+                window.open("https://www.youtube.com/watch?v=lAkuJXGldrM", "_blank");
+              } else if (e.key === "Escape") {
+                setTermsReadMode(false);
+                setTermsPage(0);
+              }
+            } else {
+              if (e.key === "y" || e.key === "Y") {
+                localStorage.setItem("didAcceptTerms", "true");
+                setShowTermsScreen(false);
+                setTimeout(() => focusTextbox(), 50);
+              }
+              if (e.key === "r" || e.key === "R") {
+                setTermsReadMode(true);
+                setTermsPage(0);
+              }
+              if (e.key === "n" || e.key === "N") {
+                window.open("https://www.youtube.com/watch?v=lAkuJXGldrM", "_blank");
+              }
             }
           }}
         >
-          <div className="Terms-content">
-            <div className="Terms-title">Welcome to Swapchat : )</div>
-            <div className="Terms-strapline">Chat like it's 1998!</div>
-            <div className="Terms-prompt">Agree to Terms? Y/N</div>
-            <div className="Terms-hint">Press R to read</div>
-          </div>
+          {!termsReadMode ? (
+            <div className="Terms-content">
+              <div className="Terms-title">Welcome to Swapchat : )</div>
+              <div className="Terms-strapline">Chat like it's 1998!</div>
+              <div className="Terms-prompt">Agree to Terms? Y/N</div>
+              <div className="Terms-hint">Press R to read</div>
+            </div>
+          ) : (
+            <div className="Terms-content Terms-reader">
+              <div className="Terms-reader-text">{termsPages[termsPage]}</div>
+              <div className="Terms-reader-nav">
+                Page {termsPage + 1} of {termsPages.length}
+                {termsPage < termsPages.length - 1
+                  ? " - Press SPACE for next"
+                  : ""}
+              </div>
+              {termsPage === termsPages.length - 1 && (
+                <div className="Terms-prompt">Agree to Terms? Y/N</div>
+              )}
+              <div className="Terms-hint">ESC to go back</div>
+            </div>
+          )}
         </div>
       )}
       {showFullscreenQR && (
