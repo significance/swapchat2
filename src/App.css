@@ -251,6 +251,58 @@ body {
   }
 }
 
+/*terms BSOD screen*/
+
+.Terms-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000084;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  outline: none;
+}
+
+.Terms-content {
+  text-align: center;
+  color: #ffffff;
+}
+
+.Terms-title {
+  font-size: 32px;
+  line-height: 45px;
+  margin-bottom: 10px;
+}
+
+.Terms-strapline {
+  font-size: 20px;
+  line-height: 30px;
+  margin-bottom: 40px;
+  color: #b0b0b0;
+}
+
+.Terms-prompt {
+  font-size: 28px;
+  line-height: 40px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  background: #a8a8a8;
+  color: #000084;
+  display: inline-block;
+  padding: 2px 15px;
+}
+
+.Terms-hint {
+  font-size: 18px;
+  line-height: 28px;
+  color: #6080c0;
+  margin-top: 20px;
+}
+
 /*fullscreen qr*/
 
 .QR-fullscreen {

@@ -1,11 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { ChatPage } from './helpers/chat-page';
-import { setupInitiator, setupConnectedPair } from './helpers/two-party';
+import { setupInitiator } from './helpers/two-party';
 import type { BrowserContext } from '@playwright/test';
 
 // These tests run against a server started with VITE_REQUIRE_TERMS=true
-// Use: VITE_REQUIRE_TERMS=true npm run test:e2e -- e2e/terms-enabled.spec.ts
-test.describe('terms enabled', () => {
+test.describe('terms BSOD screen', () => {
   test.skip(
     !process.env.VITE_REQUIRE_TERMS,
     'Skipped unless VITE_REQUIRE_TERMS=true'
@@ -18,29 +17,33 @@ test.describe('terms enabled', () => {
     await context?.close();
   });
 
-  test('sending message without accepting terms shows warning', async ({ browser }) => {
+  test('terms screen appears on load', async ({ browser }) => {
     ({ page, context } = await setupInitiator(browser));
-    await page.sendMessage('hello');
-    await page.waitForSysMessage('You must accept the Terms and Conditions');
+    const visible = await page.isTermsScreenVisible();
+    expect(visible).toBe(true);
+    await expect(page.raw.locator('.Terms-title')).toHaveText('Welcome to Swapchat : )');
+    await expect(page.raw.locator('.Terms-strapline')).toHaveText('Chat like it\'s 1998!');
+    await expect(page.raw.locator('.Terms-prompt')).toContainText('Y/N');
   });
 
-  test('/a accepts terms and shows confirmation', async ({ browser }) => {
+  test('pressing Y dismisses terms and sets localStorage', async ({ browser }) => {
     ({ page, context } = await setupInitiator(browser));
-    await page.sendMessage('/a');
-    await page.waitForSysMessage('Terms accepted');
-  });
-
-  test('/terms accept also works', async ({ browser }) => {
-    ({ page, context } = await setupInitiator(browser));
-    await page.sendMessage('/terms accept');
-    await page.waitForSysMessage('Terms accepted');
-  });
-
-  test('terms acceptance persists in localStorage', async ({ browser }) => {
-    ({ page, context } = await setupInitiator(browser));
-    await page.acceptTerms();
-    await page.waitForSysMessage('Terms accepted');
+    expect(await page.isTermsScreenVisible()).toBe(true);
+    await page.dismissTermsScreen();
+    expect(await page.isTermsScreenVisible()).toBe(false);
     const stored = await page.raw.evaluate(() => localStorage.getItem('didAcceptTerms'));
     expect(stored).toBe('true');
+  });
+
+  test('terms screen does not reappear after acceptance', async ({ browser }) => {
+    context = await browser.newContext();
+    const rawPage = await context.newPage();
+    page = new ChatPage(rawPage);
+    // Set localStorage before navigating
+    await rawPage.goto('/');
+    await rawPage.evaluate(() => localStorage.setItem('didAcceptTerms', 'true'));
+    await rawPage.goto('/');
+    await rawPage.waitForTimeout(1000);
+    expect(await page.isTermsScreenVisible()).toBe(false);
   });
 });

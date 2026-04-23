@@ -70,15 +70,9 @@ const Chat = (props: any) => {
     animateElement(chatInner);
   };
 
-  const didAcceptTerms = () => {
-    if (!REQUIRE_TERMS) return true;
-    return localStorage.getItem("didAcceptTerms") === "true";
-  };
-
-  const acceptTerms = () => {
-    localStorage.setItem("didAcceptTerms", "true");
-    sendSysMessage("Terms accepted. Thanks for chatting with Swapchat! :)");
-  };
+  const [showTermsScreen, setShowTermsScreen] = useState(
+    REQUIRE_TERMS && localStorage.getItem("didAcceptTerms") !== "true"
+  );
 
   const clearConversations = () => {
     setOwnConversation([]);
@@ -109,14 +103,6 @@ const Chat = (props: any) => {
       copyLinkToClipboard(false);
       return true;
     }
-    if (REQUIRE_TERMS && (message.indexOf("/terms accept") === 0 || message.indexOf("/a") === 0)) {
-      acceptTerms();
-      return true;
-    }
-    if (REQUIRE_TERMS && message.indexOf("/terms view") === 0) {
-      window.open("/terms-and-conditions.txt", "_blank");
-      return true;
-    }
     if (message.indexOf("/help connect") === 0) {
       let helpMessages = [
         "Scan the QR code above or send the link to the recipient device to connect.",
@@ -131,10 +117,6 @@ const Chat = (props: any) => {
         "Swapchat is brought to you by 1UP.digital and the irrepressible Swarm.";
       sendSysMessage(helpMessage);
       let helpMessages = [
-        ...(REQUIRE_TERMS ? [
-          "View terms: /terms view",
-          "Accept terms: /terms accept (/a)",
-        ] : []),
         "Help with connection: /help connect",
         "View useful links: /links",
         "Fullscreen QR code: /qr",
@@ -202,17 +184,9 @@ const Chat = (props: any) => {
 
   const [message, setMessage] = useState<string>("");
   const sendMessage = async () => {
+    if (showTermsScreen) return;
     let didParse = parseSlashCommands(message);
-    if (didAcceptTerms() !== true) {
-      let helpMessages = [
-        "You must accept the Terms and Conditions to proceed.",
-        "View terms: /terms view",
-        "Accept terms: /terms accept",
-      ];
-      helpMessages.forEach((m) => sendSysMessage(m));
-    }
     if (
-      didAcceptTerms() === true &&
       didParse === false &&
       connected !== true &&
       props.chatRole === "initiator"
@@ -225,7 +199,6 @@ const Chat = (props: any) => {
       helpMessages.forEach((m) => sendSysMessage(m));
     }
     if (
-      didAcceptTerms() === true &&
       didParse === false &&
       connected !== true &&
       props.chatRole === "respondent"
@@ -234,7 +207,6 @@ const Chat = (props: any) => {
       helpMessages.forEach((m) => sendSysMessage(m));
     }
     if (
-      didAcceptTerms() === true &&
       didParse === false &&
       connected === true &&
       message !== ""
@@ -422,6 +394,35 @@ const Chat = (props: any) => {
 
   return (
     <div className="Chat">
+      {showTermsScreen && (
+        <div
+          className="Terms-screen"
+          tabIndex={0}
+          ref={(el) => el?.focus()}
+          onKeyDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.key === "y" || e.key === "Y") {
+              localStorage.setItem("didAcceptTerms", "true");
+              setShowTermsScreen(false);
+              setTimeout(() => focusTextbox(), 50);
+            }
+            if (e.key === "r" || e.key === "R") {
+              window.open("https://github.com/signficance/swapchat2/blob/master/public/terms-and-conditions.txt", "_blank");
+            }
+            if (e.key === "n" || e.key === "N") {
+              window.open("https://www.youtube.com/watch?v=lAkuJXGldrM", "_blank");
+            }
+          }}
+        >
+          <div className="Terms-content">
+            <div className="Terms-title">Welcome to Swapchat : )</div>
+            <div className="Terms-strapline">Chat like it's 1998!</div>
+            <div className="Terms-prompt">Agree to Terms? Y/N</div>
+            <div className="Terms-hint">Press R to read</div>
+          </div>
+        </div>
+      )}
       {showFullscreenQR && (
         <div
           className="QR-fullscreen"

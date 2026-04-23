@@ -48,8 +48,13 @@ export class ChatPage {
     await this.page.locator('.Chat-controls button').click();
   }
 
-  async acceptTerms() {
-    await this.sendMessage('/a');
+  async isTermsScreenVisible(): Promise<boolean> {
+    return await this.page.locator('.Terms-screen').isVisible();
+  }
+
+  async dismissTermsScreen() {
+    await this.page.locator('.Terms-screen').press('y');
+    await expect(this.page.locator('.Terms-screen')).not.toBeVisible({ timeout: 2_000 });
   }
 
   async getOwnMessages(): Promise<string[]> {
