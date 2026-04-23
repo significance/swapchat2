@@ -52,7 +52,9 @@ const Chat = (props: any) => {
   const scrollToBottom = () => {
     if (chatModal.current) {
       let messages = chatModal.current.getElementsByClassName("Chat-message");
-      messages[messages.length - 1].scrollIntoView();
+      if (messages.length > 0) {
+        messages[messages.length - 1].scrollIntoView();
+      }
     }
   };
 

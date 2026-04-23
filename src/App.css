@@ -49,7 +49,7 @@ body {
 .Chat-inner {
   background: #f1f7fb;
   height: 300px;
-  overflow: scroll;
+  overflow: auto;
   color: #000;
   border: 4px solid #b5cadf;
   margin-bottom: 10px;

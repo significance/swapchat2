@@ -1,24 +1,26 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 export default defineConfig({
-  plugins: [react()],
-  define: {
-    global: 'globalThis',
-  },
+  plugins: [
+    react(),
+    nodePolyfills({
+      include: ['buffer', 'process', 'crypto', 'stream', 'util'],
+      globals: {
+        Buffer: true,
+        process: true,
+        global: true,
+      },
+    }),
+  ],
   resolve: {
     alias: {
       swapchat: path.resolve(__dirname, '../swapchat_engine/src/index.ts'),
-      buffer: 'buffer',
-      stream: 'stream-browserify',
-      crypto: 'crypto-browserify',
     },
   },
   server: {
     port: 3000,
-  },
-  optimizeDeps: {
-    include: ['buffer', 'process'],
   },
 })
