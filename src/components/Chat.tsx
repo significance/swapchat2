@@ -3,6 +3,7 @@ import SwapChat from "swapchat";
 import QRCode from "qrcode";
 
 const POLL_TIMEOUT = 1000;
+const REQUIRE_TERMS = import.meta.env.VITE_REQUIRE_TERMS === "true";
 
 const Chat = (props: any) => {
   const [sysConversation, setSysConversation] = useState<any>([]);
@@ -68,6 +69,7 @@ const Chat = (props: any) => {
   };
 
   const didAcceptTerms = () => {
+    if (!REQUIRE_TERMS) return true;
     return localStorage.getItem("didAcceptTerms") === "true";
   };
 
@@ -105,11 +107,11 @@ const Chat = (props: any) => {
       copyLinkToClipboard(false);
       return true;
     }
-    if (message.indexOf("/terms accept") === 0 || message.indexOf("/a") === 0) {
+    if (REQUIRE_TERMS && (message.indexOf("/terms accept") === 0 || message.indexOf("/a") === 0)) {
       acceptTerms();
       return true;
     }
-    if (message.indexOf("/terms view") === 0) {
+    if (REQUIRE_TERMS && message.indexOf("/terms view") === 0) {
       window.open("/terms-and-conditions.txt", "_blank");
       return true;
     }
@@ -127,8 +129,10 @@ const Chat = (props: any) => {
         "Swapchat is brought to you by 1UP.digital and the almighty Swarm.";
       sendSysMessage(helpMessage);
       let helpMessages = [
-        "View terms: /terms view",
-        "Accept terms: /terms accept (/a)",
+        ...(REQUIRE_TERMS ? [
+          "View terms: /terms view",
+          "Accept terms: /terms accept (/a)",
+        ] : []),
         "Help with connection: /help connect",
         "View useful links: /links",
         "Clear messages: /clear",

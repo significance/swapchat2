@@ -13,17 +13,14 @@ test.describe('slash commands', () => {
 
   test('/help shows help menu', async ({ browser }) => {
     ({ page, context } = await setupInitiator(browser));
-    await page.acceptTerms();
     await page.sendMessage('/help');
     await page.waitForSysMessage('Swapchat is brought to you by');
     const sys = await page.getSysMessages();
-    expect(sys.some(m => m.includes('/terms view'))).toBe(true);
     expect(sys.some(m => m.includes('/clear'))).toBe(true);
   });
 
   test('/clear removes all messages', async ({ browser }) => {
     ({ page, context } = await setupInitiator(browser));
-    await page.acceptTerms();
     await page.sendMessage('/help');
     await page.waitForSysMessage('Swapchat is brought to you by');
 
@@ -31,7 +28,6 @@ test.describe('slash commands', () => {
     expect(before.length).toBeGreaterThan(0);
 
     await page.sendMessage('/clear');
-    // After clear, give a moment for state to update
     await page.raw.waitForTimeout(500);
     const own = await page.getOwnMessages();
     const sys = await page.getSysMessages();
@@ -41,15 +37,13 @@ test.describe('slash commands', () => {
 
   test('/copy code shows confirmation (initiator)', async ({ browser }) => {
     ({ page, context } = await setupInitiator(browser));
-    await page.acceptTerms();
-    await page.getToken(); // wait for token to be generated
+    await page.getToken();
     await page.sendMessage('/copy code');
     await page.waitForSysMessage('Code copied to clipboard.');
   });
 
   test('/copy link shows confirmation (initiator)', async ({ browser }) => {
     ({ page, context } = await setupInitiator(browser));
-    await page.acceptTerms();
     await page.getToken();
     await page.sendMessage('/copy link');
     await page.waitForSysMessage('Link copied to clipboard.');
@@ -57,14 +51,12 @@ test.describe('slash commands', () => {
 
   test('/help connect shows connection help', async ({ browser }) => {
     ({ page, context } = await setupInitiator(browser));
-    await page.acceptTerms();
     await page.sendMessage('/help connect');
     await page.waitForSysMessage('Scan the QR code');
   });
 
   test('/links shows links submenu', async ({ browser }) => {
     ({ page, context } = await setupInitiator(browser));
-    await page.acceptTerms();
     await page.sendMessage('/links');
     await page.waitForSysMessage('Swarm');
     const sys = await page.getSysMessages();
@@ -74,7 +66,6 @@ test.describe('slash commands', () => {
 
   test('unknown slash command does not appear as own message', async ({ browser }) => {
     ({ page, context } = await setupInitiator(browser));
-    await page.acceptTerms();
     await page.sendMessage('/nonexistent');
     await page.raw.waitForTimeout(500);
     const own = await page.getOwnMessages();

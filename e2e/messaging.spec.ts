@@ -6,8 +6,6 @@ test.describe('message exchange', () => {
 
   test.beforeEach(async ({ browser }) => {
     pair = await setupConnectedPair(browser);
-    await pair.initiator.acceptTerms();
-    await pair.respondent.acceptTerms();
   });
 
   test.afterEach(async () => {
