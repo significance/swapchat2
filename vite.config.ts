@@ -18,6 +18,9 @@ export default defineConfig({
   resolve: {
     alias: {
       swapchat: path.resolve(__dirname, '../swapchat_engine/src/index.ts'),
+      'vite-plugin-node-polyfills/shims/buffer': path.resolve(__dirname, 'node_modules/vite-plugin-node-polyfills/shims/buffer/dist/index.js'),
+      'vite-plugin-node-polyfills/shims/global': path.resolve(__dirname, 'node_modules/vite-plugin-node-polyfills/shims/global/dist/index.js'),
+      'vite-plugin-node-polyfills/shims/process': path.resolve(__dirname, 'node_modules/vite-plugin-node-polyfills/shims/process/dist/index.js'),
     },
   },
   server: {

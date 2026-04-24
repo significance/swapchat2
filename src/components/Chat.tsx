@@ -286,6 +286,12 @@ const Chat = (props: any) => {
     if (props.stamp) {
       sc.BatchID = props.stamp;
     }
+    if (props.signerKey) {
+      sc.SignerKey = props.signerKey;
+    }
+    if (props.stampDepth) {
+      sc.StampDepth = props.stampDepth;
+    }
     return sc;
   });
 

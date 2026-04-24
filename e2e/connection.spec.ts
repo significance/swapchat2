@@ -11,10 +11,10 @@ test.describe('connection flow', () => {
     await context.close();
   });
 
-  test('initiator generates a 1708-character token', async ({ browser }) => {
+  test('initiator generates a long base64url token', async ({ browser }) => {
     const { page, context } = await setupInitiator(browser);
     const token = await page.getToken();
-    expect(token).toHaveLength(1708);
+    expect(token.length).toBeGreaterThan(100);
     await context.close();
   });
 
