@@ -215,6 +215,7 @@ const Chat = (props: any) => {
   const [message, setMessage] = useState<string>("");
   const sendMessage = async () => {
     if (setupStage !== "ready") return;
+    if (message.trim() === "") return;
     let didParse = parseSlashCommands(message);
     if (
       didParse === false &&
@@ -722,6 +723,7 @@ const Chat = (props: any) => {
           onChange={(e) => setMessage(e.target.value)}
           onKeyUp={handleTextareaKeyup}
           value={message}
+          maxLength={2048}
         />
         <button ref={messageSendbutton} onClick={sendMessage}>
           Send
