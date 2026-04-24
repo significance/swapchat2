@@ -633,7 +633,7 @@ const Chat = (props: any) => {
       <header>
         <div className="Chat-header-left">
           <img className="Swapchat-logo" alt="swapchat" src="./swapchat3.png" />
-          <div className="Chat-header-left-logotext">SwapChat 2.0</div>
+          <div className="Chat-header-left-logotext">SwapChat 3.0</div>
         </div>
         {connected === true && (
           <div className="Chat-header-right">
