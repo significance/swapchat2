@@ -70,11 +70,27 @@ const Chat = (props: any) => {
     animateElement(chatInner);
   };
 
-  const [showTermsScreen, setShowTermsScreen] = useState(
-    REQUIRE_TERMS && localStorage.getItem("didAcceptTerms") !== "true"
-  );
+  const getSetupStage = () => {
+    if (REQUIRE_TERMS && localStorage.getItem("didAcceptTerms") !== "true") return "terms";
+    if (!(props.signerKey || localStorage.getItem("swapchat_signerKey"))) return "signerKey";
+    if (!(props.stamp || localStorage.getItem("swapchat_batchId"))) return "batchId";
+    return "ready";
+  };
+
+  const [setupStage, setSetupStage] = useState(getSetupStage);
   const [termsReadMode, setTermsReadMode] = useState(false);
   const [termsPage, setTermsPage] = useState(0);
+  const [keyInput, setKeyInput] = useState("");
+  const [keyError, setKeyError] = useState("");
+  const [batchInput, setBatchInput] = useState("");
+  const [batchError, setBatchError] = useState("");
+
+  const advanceSetup = () => {
+    setSetupStage(getSetupStage());
+  };
+
+  const savedSignerKey = props.signerKey || localStorage.getItem("swapchat_signerKey") || "";
+  const savedBatchId = props.stamp || localStorage.getItem("swapchat_batchId") || "";
 
   const termsPages = [
     "SWAPCHAT TERMS OF USE (APR 2026)\n\nSwapchat is an educational and evaluation tool developed by 1up.digital. It is built on Ethereum Swarm, a decentralized peer-to-peer storage and communication network.\n\nSwapchat is provided for testing and evaluation purposes only. It is not intended for production use. It is provided AS IS, at no charge, with no warranty of any kind.",
@@ -94,6 +110,11 @@ const Chat = (props: any) => {
   const parseSlashCommands = (message: string) => {
     //display QR code big
     //notarise on X chain
+    if (message.indexOf("/reset") === 0) {
+      localStorage.clear();
+      window.location.reload();
+      return true;
+    }
     if (message.indexOf("/clear") === 0) {
       clearConversations();
       return true;
@@ -193,7 +214,7 @@ const Chat = (props: any) => {
 
   const [message, setMessage] = useState<string>("");
   const sendMessage = async () => {
-    if (showTermsScreen) return;
+    if (setupStage !== "ready") return;
     let didParse = parseSlashCommands(message);
     if (
       didParse === false &&
@@ -221,6 +242,11 @@ const Chat = (props: any) => {
       message !== ""
     ) {
       await swapChat.send(message);
+      // Save stamp bucket state after each send
+      try {
+        const state = swapChat.Swarm.getStampState?.();
+        if (state) localStorage.setItem("swapchat_stampState", JSON.stringify(Array.from(state)));
+      } catch (e) {}
       let messages = Array.from(swapChat.OwnConversation.messages);
       await setOwnConversation(messages);
       scrollToBottom();
@@ -283,14 +309,24 @@ const Chat = (props: any) => {
       props.gatewayMode,
       POLL_TIMEOUT
     );
-    if (props.stamp) {
-      sc.BatchID = props.stamp;
+    if (savedBatchId) {
+      sc.BatchID = savedBatchId;
     }
-    if (props.signerKey) {
-      sc.SignerKey = props.signerKey;
+    if (savedSignerKey) {
+      sc.SignerKey = savedSignerKey;
     }
     if (props.stampDepth) {
       sc.StampDepth = props.stampDepth;
+    }
+    // Restore stamp bucket state from localStorage
+    if (savedSignerKey && savedBatchId) {
+      try {
+        const saved = localStorage.getItem("swapchat_stampState");
+        if (saved) {
+          const buckets = new Uint32Array(JSON.parse(saved));
+          sc.Swarm.useClientStamp(savedSignerKey, savedBatchId, sc.StampDepth, buckets);
+        }
+      } catch (e) {}
     }
     return sc;
   });
@@ -328,24 +364,47 @@ const Chat = (props: any) => {
     }
   };
 
+  // One-time UI setup
+  useEffect(() => {
+    if (didLoad === false) {
+      setDidLoad(true);
+      setChatRole(props.chatRole);
+      animateIsConnecting();
+
+      //fix because mobile safari, brave and chrome vh differ
+      if (chatInner.current) {
+        if (window.innerWidth < 600) {
+          chatInner.current.style.height = `${
+            document.documentElement.clientHeight - 122
+          }px`;
+        }
+      }
+    }
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Chat initialization — runs when setup completes
+  const [chatStarted, setChatStarted] = useState(false);
   useEffect(
     () => {
-      if (didLoad === false) {
-        focusTextbox();
+      if (setupStage !== "ready" || chatStarted) return;
+      setChatStarted(true);
+      focusTextbox();
 
-        //fix because mobile safari, brave and chrome vh differ
-        if (chatInner.current) {
-          if (window.innerWidth < 600) {
-            chatInner.current.style.height = `${
-              document.documentElement.clientHeight - 122
-            }px`;
+      // Validate saved stamp on reload
+      if (swapChat.Swarm.ClientStamper) {
+        (async () => {
+          const valid = await swapChat.Swarm.validateStampBatch();
+          if (!valid) {
+            localStorage.removeItem("swapchat_batchId");
+            localStorage.removeItem("swapchat_stampState");
+            setSetupStage("batchId");
+            setChatStarted(false);
           }
-        }
+        })();
+      }
 
-        setDidLoad(true);
-        setChatRole(props.chatRole);
-        animateIsConnecting();
-        if (props.chatRole === "initiator") {
+      if (props.chatRole === "initiator") {
           (async () => {
             sendSysMessage("Type /help for help :)");
             await swapChat.initiate();
@@ -361,6 +420,12 @@ const Chat = (props: any) => {
             setCurrentQRCodeData(qrCodeData);
 
             await swapChat.waitForRespondentHandshakeChunk();
+
+            // Save stamp state after handshake
+            try {
+              const state = swapChat.Swarm.getStampState?.();
+              if (state) localStorage.setItem("swapchat_stampState", JSON.stringify(Array.from(state)));
+            } catch (e) {}
 
             sendSysMessage("Connected!");
 
@@ -383,10 +448,9 @@ const Chat = (props: any) => {
             setConnected(true);
           })();
         }
-      }
     },
     //eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [setupStage]
   );
 
   const generateQRCode = (link: string, width = 150, dark = "#000000"): Promise<string> => {
@@ -409,7 +473,7 @@ const Chat = (props: any) => {
 
   return (
     <div className="Chat">
-      {showTermsScreen && (
+      {setupStage === "terms" && (
         <div
           className="Terms-screen"
           tabIndex={0}
@@ -417,15 +481,17 @@ const Chat = (props: any) => {
           onKeyDown={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            const acceptTerms = () => {
+              localStorage.setItem("didAcceptTerms", "true");
+              advanceSetup();
+            };
             if (termsReadMode) {
               if ((e.key === " " || e.key === "Enter" || e.key === "ArrowRight" || e.key === "PageDown") && termsPage < termsPages.length - 1) {
                 setTermsPage(termsPage + 1);
               } else if ((e.key === "ArrowLeft" || e.key === "PageUp") && termsPage > 0) {
                 setTermsPage(termsPage - 1);
               } else if (e.key === "y" || e.key === "Y") {
-                localStorage.setItem("didAcceptTerms", "true");
-                setShowTermsScreen(false);
-                setTimeout(() => focusTextbox(), 50);
+                acceptTerms();
               } else if (e.key === "n" || e.key === "N") {
                 window.open("https://www.youtube.com/watch?v=lAkuJXGldrM", "_blank");
               } else if (e.key === "Escape") {
@@ -434,9 +500,7 @@ const Chat = (props: any) => {
               }
             } else {
               if (e.key === "y" || e.key === "Y") {
-                localStorage.setItem("didAcceptTerms", "true");
-                setShowTermsScreen(false);
-                setTimeout(() => focusTextbox(), 50);
+                acceptTerms();
               }
               if (e.key === "r" || e.key === "R") {
                 setTermsReadMode(true);
@@ -470,6 +534,88 @@ const Chat = (props: any) => {
               <div className="Terms-hint">ESC to go back</div>
             </div>
           )}
+        </div>
+      )}
+      {setupStage === "signerKey" && (
+        <div className="Terms-screen" tabIndex={0}>
+          <div className="Terms-content">
+            <div className="Terms-title">Wallet Configuration</div>
+            <div className="Terms-strapline">
+              Enter the private key for an account{"\n"}which has a usable stamp
+            </div>
+            <div className="Key-warning">
+              Warning: use a burner key only!{"\n"}A webpage is not a secure way to handle{"\n"}important key material!!
+            </div>
+            <div className="Key-input-row">
+              <span className="Key-prompt">&gt; </span>
+              <input
+                className="Key-input"
+                type="password"
+                ref={(el) => el?.focus()}
+                value={keyInput}
+                onChange={(e) => { setKeyInput(e.target.value.replace(/^0x/, "")); setKeyError(""); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && keyInput.length === 64) {
+                    localStorage.setItem("swapchat_signerKey", keyInput);
+                    swapChat.SignerKey = keyInput;
+                    advanceSetup();
+                  } else if (e.key === "Enter" && keyInput.length > 0) {
+                    setKeyError("Key must be 64 hex characters");
+                  }
+                }}
+                placeholder="64 character hex private key"
+                maxLength={64}
+                spellCheck={false}
+                autoComplete="off"
+              />
+            </div>
+            {keyError && <div className="Key-error">{keyError}</div>}
+            <div className="Terms-hint">{keyInput.length}/64 characters</div>
+          </div>
+        </div>
+      )}
+      {setupStage === "batchId" && (
+        <div className="Terms-screen" tabIndex={0}>
+          <div className="Terms-content">
+            <div className="Terms-title">Stamp Configuration</div>
+            <div className="Terms-strapline">Enter the postage batch ID</div>
+            <div className="Key-input-row">
+              <span className="Key-prompt">&gt; </span>
+              <input
+                className="Key-input"
+                type="text"
+                ref={(el) => el?.focus()}
+                value={batchInput}
+                onChange={(e) => { setBatchInput(e.target.value.replace(/^0x/, "")); setBatchError(""); }}
+                onKeyDown={async (e) => {
+                  if (e.key === "Enter" && batchInput.length === 64) {
+                    setBatchError("Validating...");
+                    swapChat.BatchID = batchInput;
+                    const signerKey = swapChat.SignerKey || localStorage.getItem("swapchat_signerKey") || "";
+                    if (signerKey) {
+                      swapChat.Swarm.useClientStamp(signerKey, batchInput, swapChat.StampDepth);
+                    }
+                    const valid = await swapChat.Swarm.validateStampBatch();
+                    if (valid) {
+                      localStorage.setItem("swapchat_batchId", batchInput);
+                      advanceSetup();
+                      setTimeout(() => focusTextbox(), 50);
+                    } else {
+                      setBatchError("Stamp batch is not valid or not usable");
+                    }
+                  } else if (e.key === "Enter" && batchInput.length > 0) {
+                    setBatchError("Batch ID must be 64 hex characters");
+                  }
+                }}
+                placeholder="64 character hex batch ID"
+                maxLength={64}
+                spellCheck={false}
+                autoComplete="off"
+              />
+            </div>
+            {batchError && <div className="Key-error">{batchError}</div>}
+            <div className="Terms-hint">{batchInput.length}/64 characters</div>
+          </div>
         </div>
       )}
       {showFullscreenQR && (

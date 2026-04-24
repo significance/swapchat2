@@ -5,10 +5,31 @@ export class ChatPage {
 
   async goInitiator() {
     await this.page.goto('/');
+    await this.dismissOverlays();
   }
 
   async goRespondent(token: string) {
     await this.page.goto(`/?token=${token}`);
+    await this.dismissOverlays();
+  }
+
+  async dismissOverlays() {
+    // Set all required localStorage values to skip setup screens, then reload
+    await this.page.evaluate(() => {
+      localStorage.setItem('didAcceptTerms', 'true');
+      if (!localStorage.getItem('swapchat_signerKey')) {
+        localStorage.setItem('swapchat_signerKey', '3401547c56eb63bc46206a4841e9ba74cb60068574a49de2c8c467658b889560');
+      }
+      if (!localStorage.getItem('swapchat_batchId')) {
+        localStorage.setItem('swapchat_batchId', 'e482491f34816db1ad32ef782b31ff996b3ce288948597d642155fca1e543a2b');
+      }
+    });
+    // Only reload if a setup screen is showing
+    const setupScreen = this.page.locator('.Terms-screen');
+    if (await setupScreen.isVisible().catch(() => false)) {
+      await this.page.reload();
+      await this.page.waitForTimeout(500);
+    }
   }
 
   async getToken(): Promise<string> {
@@ -49,12 +70,14 @@ export class ChatPage {
   }
 
   async isTermsScreenVisible(): Promise<boolean> {
-    return await this.page.locator('.Terms-screen').isVisible();
+    const screen = this.page.locator('.Terms-screen');
+    if (!(await screen.isVisible().catch(() => false))) return false;
+    const title = await this.page.locator('.Terms-title').textContent().catch(() => '');
+    return title?.includes('Welcome') ?? false;
   }
 
-  async dismissTermsScreen() {
-    await this.page.locator('.Terms-screen').press('y');
-    await expect(this.page.locator('.Terms-screen')).not.toBeVisible({ timeout: 2_000 });
+  async isSetupScreenVisible(): Promise<boolean> {
+    return await this.page.locator('.Terms-screen').isVisible().catch(() => false);
   }
 
   async getOwnMessages(): Promise<string[]> {
