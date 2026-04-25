@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import SwapChat from "swapchat";
 import QRCode from "qrcode";
 
-const POLL_TIMEOUT = 5000;
+const POLL_TIMEOUT = 1000;
+const REQUIRE_TERMS = import.meta.env.VITE_REQUIRE_TERMS === "true";
 
 const Chat = (props: any) => {
   const [sysConversation, setSysConversation] = useState<any>([]);
@@ -50,10 +51,14 @@ const Chat = (props: any) => {
   const chatModal = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
-    if (chatModal.current) {
-      let messages = chatModal.current.getElementsByClassName("Chat-message");
-      messages[messages.length - 1].scrollIntoView();
-    }
+    setTimeout(() => {
+      if (chatModal.current) {
+        let messages = chatModal.current.getElementsByClassName("Chat-message");
+        if (messages.length > 0) {
+          messages[messages.length - 1].scrollIntoView();
+        }
+      }
+    }, 50);
   };
 
   const chatInner = useRef<HTMLDivElement>(null);
@@ -65,14 +70,18 @@ const Chat = (props: any) => {
     animateElement(chatInner);
   };
 
-  const didAcceptTerms = () => {
-    return localStorage.getItem("didAcceptTerms") === "true";
-  };
+  const [showTermsScreen, setShowTermsScreen] = useState(
+    REQUIRE_TERMS && localStorage.getItem("didAcceptTerms") !== "true"
+  );
+  const [termsReadMode, setTermsReadMode] = useState(false);
+  const [termsPage, setTermsPage] = useState(0);
 
-  const acceptTerms = () => {
-    localStorage.setItem("didAcceptTerms", "true");
-    sendSysMessage("Terms accepted. Thanks for chatting with Swapchat! :)");
-  };
+  const termsPages = [
+    "SWAPCHAT TERMS OF USE (APR 2026)\n\nSwapchat is an educational and evaluation tool developed by 1up.digital. It is built on Ethereum Swarm, a decentralized peer-to-peer storage and communication network.\n\nSwapchat is provided for testing and evaluation purposes only. It is not intended for production use. It is provided AS IS, at no charge, with no warranty of any kind.",
+    "HOW IT WORKS\n\nMessages are end-to-end encrypted using a hybrid scheme combining classical elliptic curve key exchange (ECDH) with post-quantum key encapsulation (ML-KEM-768). Only you and your chat partner can read your messages.\n\nEncrypted messages are stored as chunks on the Swarm network. Because Swarm is decentralized, chunks may be stored by any node operator in any jurisdiction. Data persistence is not guaranteed.",
+    "YOUR RESPONSIBILITIES\n\nYou agree to use Swapchat lawfully and responsibly. You shall not use Swapchat to store or transfer illegal, infringing, or harmful content, including malware.\n\nYou are solely responsible for the content you send. You agree not to interfere with or disrupt the integrity or availability of the service or the Swarm network.",
+    "LIMITATIONS\n\nSwapchat and its developers bear no liability for any harm, damage, data loss, or other consequence arising from your use of the software.\n\nWe may discontinue Swapchat at any time without notice. We may modify these terms at any time.\n\nThese terms are governed by British law.",
+  ];
 
   const clearConversations = () => {
     setOwnConversation([]);
@@ -103,14 +112,6 @@ const Chat = (props: any) => {
       copyLinkToClipboard(false);
       return true;
     }
-    if (message.indexOf("/terms accept") === 0 || message.indexOf("/a") === 0) {
-      acceptTerms();
-      return true;
-    }
-    if (message.indexOf("/terms view") === 0) {
-      window.open("/terms-and-conditions.txt", "_blank");
-      return true;
-    }
     if (message.indexOf("/help connect") === 0) {
       let helpMessages = [
         "Scan the QR code above or send the link to the recipient device to connect.",
@@ -122,13 +123,12 @@ const Chat = (props: any) => {
     }
     if (message.indexOf("/help") === 0) {
       let helpMessage =
-        "Swapchat is brought to you by 1UP.digital and the almighty Swarm.";
+        "Swapchat is brought to you by 1UP.digital and the irrepressible Swarm.";
       sendSysMessage(helpMessage);
       let helpMessages = [
-        "View terms: /terms view",
-        "Accept terms: /terms accept (/a)",
         "Help with connection: /help connect",
         "View useful links: /links",
+        "Fullscreen QR code: /qr",
         "Clear messages: /clear",
       ];
       helpMessages.forEach((m) => sendSysMessage(m));
@@ -160,6 +160,16 @@ const Chat = (props: any) => {
       window.open("https://github.com/signficance/swapchat-engine", "_blank");
       return true;
     }
+    if (message.indexOf("/qr") === 0) {
+      if (chatRole === "initiator" && chatLink) {
+        (async () => {
+          const bigQR = await generateQRCode(chatLink, 500, "#0170f8");
+          setFullscreenQRData(bigQR);
+          setShowFullscreenQR(true);
+        })();
+      }
+      return true;
+    }
     if (message.indexOf("/d") === 0 && message.length === 3) {
       if (chatRole === "initiator") {
         window.open(chatLink, "_blank");
@@ -183,17 +193,9 @@ const Chat = (props: any) => {
 
   const [message, setMessage] = useState<string>("");
   const sendMessage = async () => {
+    if (showTermsScreen) return;
     let didParse = parseSlashCommands(message);
-    if (didAcceptTerms() !== true) {
-      let helpMessages = [
-        "You must accept the Terms and Conditions to proceed.",
-        "View terms: /terms view",
-        "Accept terms: /terms accept",
-      ];
-      helpMessages.forEach((m) => sendSysMessage(m));
-    }
     if (
-      didAcceptTerms() === true &&
       didParse === false &&
       connected !== true &&
       props.chatRole === "initiator"
@@ -206,7 +208,6 @@ const Chat = (props: any) => {
       helpMessages.forEach((m) => sendSysMessage(m));
     }
     if (
-      didAcceptTerms() === true &&
       didParse === false &&
       connected !== true &&
       props.chatRole === "respondent"
@@ -215,7 +216,6 @@ const Chat = (props: any) => {
       helpMessages.forEach((m) => sendSysMessage(m));
     }
     if (
-      didAcceptTerms() === true &&
       didParse === false &&
       connected === true &&
       message !== ""
@@ -232,6 +232,14 @@ const Chat = (props: any) => {
   const handleTextareaKeyup = (e: any) => {
     if (e.key === "Enter") {
       sendMessage();
+    }
+    if (e.key === "PageUp" && chatInner.current) {
+      e.preventDefault();
+      chatInner.current.scrollTop -= chatInner.current.clientHeight;
+    }
+    if (e.key === "PageDown" && chatInner.current) {
+      e.preventDefault();
+      chatInner.current.scrollTop += chatInner.current.clientHeight;
     }
   };
 
@@ -268,15 +276,18 @@ const Chat = (props: any) => {
     return combo.sort(orderConversation);
   }, [sysConversation, ownConversation, otherConversation]);
 
-  const [swapChat] = useState<SwapChat>(
-    new SwapChat(
+  const [swapChat] = useState<SwapChat>(() => {
+    const sc = new SwapChat(
       props.apiURL,
-      props.debugURL,
       messageWasReceived,
       props.gatewayMode,
       POLL_TIMEOUT
-    )
-  );
+    );
+    if (props.stamp) {
+      sc.BatchID = props.stamp;
+    }
+    return sc;
+  });
 
   const [generatedToken, setGeneratedToken] = useState<string>("");
   const [chatLink, setChatLink] = useState<string>("");
@@ -287,6 +298,8 @@ const Chat = (props: any) => {
   const [didLoad, setDidLoad] = useState<boolean>(false);
 
   const [currentQRCodeData, setCurrentQRCodeData] = useState("");
+  const [fullscreenQRData, setFullscreenQRData] = useState("");
+  const [showFullscreenQR, setShowFullscreenQR] = useState(false);
 
   const [isConnectingAnimation, setIsConnectingAnimation] = useState("");
 
@@ -370,14 +383,14 @@ const Chat = (props: any) => {
     []
   );
 
-  const generateQRCode = (link: string): Promise<string> => {
+  const generateQRCode = (link: string, width = 150, dark = "#000000"): Promise<string> => {
     return new Promise((resolve, reject) => {
       var opts = {
-        quality: 0.3,
+        errorCorrectionLevel: "L" as const,
         margin: 0,
-        width: 150,
+        width: width,
         color: {
-          dark: "#000000",
+          dark: dark,
           light: "#FFFFFF",
         },
       };
@@ -390,6 +403,80 @@ const Chat = (props: any) => {
 
   return (
     <div className="Chat">
+      {showTermsScreen && (
+        <div
+          className="Terms-screen"
+          tabIndex={0}
+          ref={(el) => el?.focus()}
+          onKeyDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (termsReadMode) {
+              if ((e.key === " " || e.key === "Enter" || e.key === "ArrowRight" || e.key === "PageDown") && termsPage < termsPages.length - 1) {
+                setTermsPage(termsPage + 1);
+              } else if ((e.key === "ArrowLeft" || e.key === "PageUp") && termsPage > 0) {
+                setTermsPage(termsPage - 1);
+              } else if (e.key === "y" || e.key === "Y") {
+                localStorage.setItem("didAcceptTerms", "true");
+                setShowTermsScreen(false);
+                setTimeout(() => focusTextbox(), 50);
+              } else if (e.key === "n" || e.key === "N") {
+                window.open("https://www.youtube.com/watch?v=lAkuJXGldrM", "_blank");
+              } else if (e.key === "Escape") {
+                setTermsReadMode(false);
+                setTermsPage(0);
+              }
+            } else {
+              if (e.key === "y" || e.key === "Y") {
+                localStorage.setItem("didAcceptTerms", "true");
+                setShowTermsScreen(false);
+                setTimeout(() => focusTextbox(), 50);
+              }
+              if (e.key === "r" || e.key === "R") {
+                setTermsReadMode(true);
+                setTermsPage(0);
+              }
+              if (e.key === "n" || e.key === "N") {
+                window.open("https://www.youtube.com/watch?v=lAkuJXGldrM", "_blank");
+              }
+            }
+          }}
+        >
+          {!termsReadMode ? (
+            <div className="Terms-content">
+              <div className="Terms-title">Welcome to Swapchat : )</div>
+              <div className="Terms-strapline">Chat like it's 1998!</div>
+              <div className="Terms-prompt">Agree to Terms? Y/N</div>
+              <div className="Terms-hint">Press R to read</div>
+            </div>
+          ) : (
+            <div className="Terms-content Terms-reader">
+              <div className="Terms-reader-text">{termsPages[termsPage]}</div>
+              <div className="Terms-reader-nav">
+                Page {termsPage + 1} of {termsPages.length}
+                {termsPage < termsPages.length - 1
+                  ? " - Press SPACE for next"
+                  : ""}
+              </div>
+              {termsPage === termsPages.length - 1 && (
+                <div className="Terms-prompt">Agree to Terms? Y/N</div>
+              )}
+              <div className="Terms-hint">ESC to go back</div>
+            </div>
+          )}
+        </div>
+      )}
+      {showFullscreenQR && (
+        <div
+          className="QR-fullscreen"
+          tabIndex={0}
+          ref={(el) => el?.focus()}
+          onKeyDown={() => { setShowFullscreenQR(false); focusTextbox(); }}
+          onClick={() => { setShowFullscreenQR(false); focusTextbox(); }}
+        >
+          <img alt="qr code fullscreen" src={fullscreenQRData} />
+        </div>
+      )}
       <header>
         <div className="Chat-header-left">
           <img className="Swapchat-logo" alt="swapchat" src="./swapchat3.png" />
