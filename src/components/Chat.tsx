@@ -226,7 +226,7 @@ const Chat = (props: any) => {
       }
       return true;
     }
-    if (message.indexOf("/theme") === 0) {
+    if (message.indexOf("/themes") === 0 || message.indexOf("/theme") === 0) {
       const parts = message.split(" ");
       if (parts.length < 2) {
         const list = THEMES.map(t => `${t === theme ? "* " : "  "}${t}`).join("\n");
