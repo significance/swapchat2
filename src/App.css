@@ -36,6 +36,7 @@ body {
   --link-color: #0170f8;
   --btn-bg: #ffffff;
   --btn-text: #000000;
+  --bg-qr-light: #ffffff;
 }
 
 /*chat*/
@@ -298,6 +299,7 @@ body {
 
 /*themes*/
 
+/* dark themes use their bg for QR light modules */
 :root[data-theme="turbo"] {
   --bg-body: #000058;
   --bg-wrapper: #000040;
@@ -313,6 +315,7 @@ body {
   --link-color: #ffff54;
   --btn-bg: #ffff54;
   --btn-text: #000080;
+  --bg-qr-light: #0000aa;
 }
 
 :root[data-theme="norton"] {
@@ -330,6 +333,7 @@ body {
   --link-color: #00ffff;
   --btn-bg: #008080;
   --btn-text: #ffffff;
+  --bg-qr-light: #0000aa;
 }
 
 :root[data-theme="matrix"] {
@@ -347,6 +351,7 @@ body {
   --link-color: #00ff00;
   --btn-bg: #003300;
   --btn-text: #00ff00;
+  --bg-qr-light: #000a00;
 }
 
 :root[data-theme="amber"] {
@@ -364,6 +369,7 @@ body {
   --link-color: #ffaa00;
   --btn-bg: #3a2800;
   --btn-text: #ffaa00;
+  --bg-qr-light: #1a1000;
 }
 
 :root[data-theme="cga"] {
@@ -381,6 +387,7 @@ body {
   --link-color: #55ffff;
   --btn-bg: #aa00aa;
   --btn-text: #ffffff;
+  --bg-qr-light: #000000;
 }
 
 :root[data-theme="neon"] {
@@ -398,6 +405,7 @@ body {
   --link-color: #00ffff;
   --btn-bg: #1a0030;
   --btn-text: #ff00ff;
+  --bg-qr-light: #050510;
 }
 
 :root[data-theme="tron"] {

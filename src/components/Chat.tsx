@@ -219,7 +219,7 @@ const Chat = (props: any) => {
     if (message.indexOf("/qr") === 0) {
       if (chatRole === "initiator" && chatLink) {
         (async () => {
-          const bigQR = await generateQRCode(chatLink, 500, "#0170f8");
+          const bigQR = await generateQRCode(chatLink, 500);
           setFullscreenQRData(bigQR);
           setShowFullscreenQR(true);
         })();
@@ -312,8 +312,9 @@ const Chat = (props: any) => {
     setMessage("");
   };
 
-  const handleTextareaKeyup = (e: any) => {
-    if (e.key === "Enter") {
+  const handleTextareaKeydown = (e: any) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       sendMessage();
     }
     if (e.key === "PageUp" && chatInner.current) {
@@ -542,15 +543,19 @@ const Chat = (props: any) => {
     //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected]);
 
-  const generateQRCode = (link: string, width = 150, dark = "#000000"): Promise<string> => {
+  const getThemeColor = (prop: string, fallback: string): string => {
+    return getComputedStyle(document.documentElement).getPropertyValue(prop).trim() || fallback;
+  };
+
+  const generateQRCode = (link: string, width = 150, dark?: string, light?: string): Promise<string> => {
     return new Promise((resolve, reject) => {
       var opts = {
         errorCorrectionLevel: "L" as const,
         margin: 0,
         width: width,
         color: {
-          dark: dark,
-          light: "#FFFFFF",
+          dark: dark || getThemeColor("--text-primary", "#000000"),
+          light: light || getThemeColor("--bg-inner", "#FFFFFF"),
         },
       };
 
@@ -810,7 +815,7 @@ const Chat = (props: any) => {
           ref={messageTextarea}
           rows={1}
           onChange={(e) => setMessage(e.target.value)}
-          onKeyUp={handleTextareaKeyup}
+          onKeyDown={handleTextareaKeydown}
           value={message}
           maxLength={2048}
         />

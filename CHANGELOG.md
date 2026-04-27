@@ -21,14 +21,26 @@
 - Stamp bucket state persisted in localStorage to prevent collisions
 - Stamp validation on entry and on reload
 
+### Themes
+- 8 DOS colour themes: classic, turbo, norton, matrix, amber, cga, neon, tron
+- /theme command to list and switch, persists in localStorage
+- CSS custom properties for full theme support
+- Themed QR codes match colour scheme
+
 ### UI / UX
 - DOS BSOD-style terms acceptance screen (Y/N/R)
 - Paged terms reader with space/arrow navigation
 - Signer key and batch ID entry screens with localStorage persistence
 - /qr command for fullscreen blue/white QR code overlay
+- /gateway command to check/switch gateway with health check
+- /fullscreen and /fs for browser fullscreen mode
 - /reset command to clear localStorage and restart setup
 - /clear, /help, /links, /copy code, /copy link slash commands
+- Gateway health check every 30s, red * blinks on error
+- Hidden mouse cursor, block caret shape (DOS authentic)
+- Transparent paper aeroplane logo (works on all themes)
 - PageUp/PageDown to scroll message history
+- Enter sends, Shift+Enter for newline
 - 1s polling (was 5s)
 - 2048 char message limit
 - Empty message guard
