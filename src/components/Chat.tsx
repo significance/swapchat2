@@ -396,19 +396,6 @@ const Chat = (props: any) => {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-    // NOTE: Some Chrome versions don't repaint html/body when CSS custom
-    // properties change via data-attribute selectors. If you see background
-    // bands on theme switch, uncomment this workaround:
-    // https://issues.chromium.org/issues/392255546
-    // requestAnimationFrame(() => {
-    //   const wrapperColor = getComputedStyle(document.documentElement).getPropertyValue("--bg-wrapper").trim();
-    //   if (wrapperColor) {
-    //     document.documentElement.style.backgroundColor = wrapperColor;
-    //     document.body.style.backgroundColor = wrapperColor;
-    //     const root = document.getElementById("root");
-    //     if (root) root.style.backgroundColor = wrapperColor;
-    //   }
-    // });
     // Regenerate QR with new theme colours
     if (chatLink) {
       (async () => {
