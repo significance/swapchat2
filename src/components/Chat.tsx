@@ -336,6 +336,7 @@ const Chat = (props: any) => {
   const [chatLink, setChatLink] = useState<string>("");
 
   const [connected, setConnected] = useState<boolean>(false);
+  const [gatewayError, setGatewayError] = useState<boolean>(false);
   const [secretCode, setSecretCode] = useState<string>("------");
   const [chatRole, setChatRole] = useState<string>("");
   const [didLoad, setDidLoad] = useState<boolean>(false);
@@ -453,6 +454,32 @@ const Chat = (props: any) => {
     //eslint-disable-next-line react-hooks/exhaustive-deps
     [setupStage]
   );
+
+  // Gateway health check — runs every 30s when connected
+  useEffect(() => {
+    if (!connected) return;
+    let active = true;
+    let hadError = false;
+    const checkGateway = async () => {
+      try {
+        const res = await fetch(props.apiURL + "/health", { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) throw new Error(`${res.status}`);
+        if (hadError) {
+          setGatewayError(false);
+          hadError = false;
+        }
+      } catch (e) {
+        if (!hadError) {
+          sendSysMessage(`Gateway error: ${props.apiURL} is not responding`);
+          hadError = true;
+        }
+        setGatewayError(true);
+      }
+    };
+    const interval = setInterval(() => { if (active) checkGateway(); }, 30000);
+    return () => { active = false; clearInterval(interval); };
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected]);
 
   const generateQRCode = (link: string, width = 150, dark = "#000000"): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -638,7 +665,7 @@ const Chat = (props: any) => {
         {connected === true && (
           <div className="Chat-header-right">
             <span className="Chat-header-connect-feedback">Connected</span>
-            <span className="Chat-is-connected"> * </span>
+            <span className={`Chat-is-connected${gatewayError ? " Chat-is-error" : ""}`}> * </span>
           </div>
         )}
         {connected === false && (

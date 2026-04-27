@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { BrowserContext } from '@playwright/test';
+import { TEST_SIGNER_KEY, TEST_BATCH_ID } from './helpers/test-config';
 
 // These tests navigate directly without using setupInitiator (which auto-dismisses overlays)
 test.describe('terms BSOD screen', () => {
@@ -44,11 +45,11 @@ test.describe('terms BSOD screen', () => {
     const page = await context.newPage();
     // Pre-set acceptance and all credentials to skip all screens
     await page.goto('/');
-    await page.evaluate(() => {
+    await page.evaluate(({ sk, bi }) => {
       localStorage.setItem('didAcceptTerms', 'true');
-      localStorage.setItem('swapchat_signerKey', '3401547c56eb63bc46206a4841e9ba74cb60068574a49de2c8c467658b889560');
-      localStorage.setItem('swapchat_batchId', 'e482491f34816db1ad32ef782b31ff996b3ce288948597d642155fca1e543a2b');
-    });
+      localStorage.setItem('swapchat_signerKey', sk);
+      localStorage.setItem('swapchat_batchId', bi);
+    }, { sk: TEST_SIGNER_KEY, bi: TEST_BATCH_ID });
     await page.goto('/');
     await page.waitForTimeout(1000);
     // Chat should be visible, no terms screen

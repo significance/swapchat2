@@ -1,8 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { BrowserContext, Page } from '@playwright/test';
-
-const SIGNER_KEY = '3401547c56eb63bc46206a4841e9ba74cb60068574a49de2c8c467658b889560';
-const BATCH_ID = 'e482491f34816db1ad32ef782b31ff996b3ce288948597d642155fca1e543a2b';
+import { TEST_SIGNER_KEY as SIGNER_KEY, TEST_BATCH_ID as BATCH_ID } from './helpers/test-config';
 const SHORT_KEY = 'abcd1234';
 
 test.describe('setup screens', () => {

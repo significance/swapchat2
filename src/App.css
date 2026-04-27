@@ -47,6 +47,14 @@ body {
   color: #ff0000;
 }
 
+.Chat-is-error {
+  animation: blink-error 0.5s step-end infinite;
+}
+
+@keyframes blink-error {
+  50% { opacity: 0; }
+}
+
 .Chat-inner {
   background: #f1f7fb;
   height: 300px;

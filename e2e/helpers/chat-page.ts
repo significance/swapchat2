@@ -1,4 +1,5 @@
 import { type Page, expect } from '@playwright/test';
+import { TEST_SIGNER_KEY, TEST_BATCH_ID } from './test-config';
 
 export class ChatPage {
   constructor(private page: Page) {}
@@ -15,15 +16,13 @@ export class ChatPage {
 
   async dismissOverlays() {
     // Set all required localStorage values to skip setup screens, then reload
-    await this.page.evaluate(() => {
+    const signerKey = TEST_SIGNER_KEY;
+    const batchId = TEST_BATCH_ID;
+    await this.page.evaluate(({ sk, bi }) => {
       localStorage.setItem('didAcceptTerms', 'true');
-      if (!localStorage.getItem('swapchat_signerKey')) {
-        localStorage.setItem('swapchat_signerKey', '3401547c56eb63bc46206a4841e9ba74cb60068574a49de2c8c467658b889560');
-      }
-      if (!localStorage.getItem('swapchat_batchId')) {
-        localStorage.setItem('swapchat_batchId', 'e482491f34816db1ad32ef782b31ff996b3ce288948597d642155fca1e543a2b');
-      }
-    });
+      if (!localStorage.getItem('swapchat_signerKey')) localStorage.setItem('swapchat_signerKey', sk);
+      if (!localStorage.getItem('swapchat_batchId')) localStorage.setItem('swapchat_batchId', bi);
+    }, { sk: signerKey, bi: batchId });
     // Only reload if a setup screen is showing
     const setupScreen = this.page.locator('.Terms-screen');
     if (await setupScreen.isVisible().catch(() => false)) {
