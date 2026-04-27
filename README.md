@@ -55,6 +55,15 @@ Requires [just](https://github.com/casey/just) and [foundry](https://getfoundry.
 | `/clear` | Clear messages |
 | `/reset` | Clear all settings and reload |
 
+#### Themes
+
+| | |
+|---|---|
+| ![classic](public/screenshots/theme-classic.png) **classic** | ![turbo](public/screenshots/theme-turbo.png) **turbo** |
+| ![norton](public/screenshots/theme-norton.png) **norton** | ![matrix](public/screenshots/theme-matrix.png) **matrix** |
+| ![amber](public/screenshots/theme-amber.png) **amber** | ![cga](public/screenshots/theme-cga.png) **cga** |
+| ![neon](public/screenshots/theme-neon.png) **neon** | *+ 1 secret theme* |
+
 #### Testing
 
 ```
