@@ -186,6 +186,7 @@ const Chat = (props: any) => {
         "Fullscreen mode: /fs",
         "Clear messages: /clear",
         "Reset all settings: /reset",
+        "Scroll: Arrow Up/Down, Page Up/Down",
       ];
       helpMessages.forEach((m) => sendSysMessage(m));
       return true;
@@ -317,13 +318,13 @@ const Chat = (props: any) => {
       e.preventDefault();
       sendMessage();
     }
-    if (e.key === "PageUp" && chatInner.current) {
+    if ((e.key === "ArrowUp" || e.key === "PageUp") && chatInner.current) {
       e.preventDefault();
-      chatInner.current.scrollTop -= chatInner.current.clientHeight;
+      chatInner.current.scrollTop -= e.key === "PageUp" ? chatInner.current.clientHeight : 40;
     }
-    if (e.key === "PageDown" && chatInner.current) {
+    if ((e.key === "ArrowDown" || e.key === "PageDown") && chatInner.current) {
       e.preventDefault();
-      chatInner.current.scrollTop += chatInner.current.clientHeight;
+      chatInner.current.scrollTop += e.key === "PageDown" ? chatInner.current.clientHeight : 40;
     }
   };
 
@@ -395,7 +396,35 @@ const Chat = (props: any) => {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
+    // NOTE: Some Chrome versions don't repaint html/body when CSS custom
+    // properties change via data-attribute selectors. If you see background
+    // bands on theme switch, uncomment this workaround:
+    // https://issues.chromium.org/issues/392255546
+    // requestAnimationFrame(() => {
+    //   const wrapperColor = getComputedStyle(document.documentElement).getPropertyValue("--bg-wrapper").trim();
+    //   if (wrapperColor) {
+    //     document.documentElement.style.backgroundColor = wrapperColor;
+    //     document.body.style.backgroundColor = wrapperColor;
+    //     const root = document.getElementById("root");
+    //     if (root) root.style.backgroundColor = wrapperColor;
+    //   }
+    // });
+    // Regenerate QR with new theme colours
+    if (chatLink) {
+      (async () => {
+        const qr = await generateQRCode(chatLink);
+        setCurrentQRCodeData(qr);
+      })();
+    }
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme]);
+
+  useEffect(() => {
+    const handleWindowClick = () => focusTextbox();
+    window.addEventListener("click", handleWindowClick);
+    return () => window.removeEventListener("click", handleWindowClick);
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [connected, setConnected] = useState<boolean>(false);
   const [gatewayError, setGatewayError] = useState<boolean>(false);

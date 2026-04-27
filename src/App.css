@@ -1,20 +1,29 @@
-body {
+html, body, #root {
   margin: 0;
+  padding: 0;
+  min-height: 100%;
+  height: 100%;
+  background-color: var(--bg-wrapper, #98b6ef);
+  cursor: none;
+  overflow: hidden;
+}
+
+body {
   font-family: DOS, Monaco, Menlo, Consolas, "Courier New", monospace;
   font-size: 25px;
   line-height: 35px;
   color: #ffffff;
-  background-color: var(--bg-body, #000084);
-  cursor: none;
 }
 
 .Wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  width: 100vw;
-  margin: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   background: var(--bg-wrapper, #98b6ef);
   cursor: none;
 }
@@ -87,11 +96,23 @@ body {
   background: var(--bg-inner);
   height: 300px;
   overflow: auto;
-  scrollbar-gutter: stable;
   color: var(--text-primary);
   border: 4px solid var(--border-color);
   margin-bottom: 10px;
   text-align: center;
+  scrollbar-color: var(--border-color) var(--bg-inner);
+}
+
+.Chat-inner::-webkit-scrollbar {
+  width: 8px;
+}
+
+.Chat-inner::-webkit-scrollbar-track {
+  background: var(--bg-inner);
+}
+
+.Chat-inner::-webkit-scrollbar-thumb {
+  background: var(--border-color);
 }
 
 /*element*/
@@ -382,7 +403,7 @@ body {
   --text-message: #ffffff;
   --text-header: #55ffff;
   --border-color: #aa00aa;
-  --shadow-color: #550055;
+  --shadow-color: #000000;
   --accent: #ff55ff;
   --link-color: #55ffff;
   --btn-bg: #aa00aa;
