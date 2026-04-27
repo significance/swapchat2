@@ -4,7 +4,8 @@ body {
   font-size: 25px;
   line-height: 35px;
   color: #ffffff;
-  background-color: #000084;
+  background-color: var(--bg-body, #000084);
+  cursor: none;
 }
 
 .Wrapper {
@@ -14,7 +15,27 @@ body {
   height: 100vh;
   width: 100vw;
   margin: auto;
-  background: #98b6ef;
+  background: var(--bg-wrapper, #98b6ef);
+  cursor: none;
+}
+
+/*theme defaults*/
+
+:root {
+  --bg-body: #000084;
+  --bg-wrapper: #98b6ef;
+  --bg-chat: #0170f8;
+  --bg-inner: #f1f7fb;
+  --bg-message: #3070f8;
+  --text-primary: #000000;
+  --text-message: #ffffff;
+  --text-header: #ffffff;
+  --border-color: #b5cadf;
+  --shadow-color: #1b4389;
+  --accent: #ff0000;
+  --link-color: #0170f8;
+  --btn-bg: #ffffff;
+  --btn-text: #000000;
 }
 
 /*chat*/
@@ -22,15 +43,21 @@ body {
 .Chat {
   width: 50vw;
   padding: 10px;
-  background: #0170f8;
+  background: var(--bg-chat);
   margin: 0 auto;
-  box-shadow: 10px 10px 0px 0px #1b4389;
+  box-shadow: 10px 10px 0px 0px var(--shadow-color);
   position: relative;
+  cursor: none;
+}
+
+.Chat, .Chat * {
+  cursor: none;
 }
 
 .Chat header {
   height: 30px;
   margin-bottom: 10px;
+  color: var(--text-header);
 }
 
 .Chat-header-left,
@@ -44,7 +71,7 @@ body {
 }
 
 .Chat-is-connected {
-  color: #ff0000;
+  color: var(--accent);
 }
 
 .Chat-is-error {
@@ -56,12 +83,12 @@ body {
 }
 
 .Chat-inner {
-  background: #f1f7fb;
+  background: var(--bg-inner);
   height: 300px;
   overflow: auto;
   scrollbar-gutter: stable;
-  color: #000;
-  border: 4px solid #b5cadf;
+  color: var(--text-primary);
+  border: 4px solid var(--border-color);
   margin-bottom: 10px;
   text-align: center;
 }
@@ -112,8 +139,8 @@ body {
 
 .Chat-code-meta li a {
   text-decoration: none;
-  color: #0170f8;
-  cursor: pointer;
+  color: var(--link-color);
+  cursor: none;
 }
 
 .Chat-code-meta li img {
@@ -123,13 +150,13 @@ body {
 }
 
 .Chat-code-verification {
-  color: #ff0000;
+  color: var(--accent);
   margin-bottom: 10px;
 }
 
 .Chat-message {
-  color: #fff;
-  background: #3070f8;
+  color: var(--text-message);
+  background: var(--bg-message);
   display: inline-block;
   padding: 10px 25px;
   margin: 0px 20px 10px 20px;
@@ -158,25 +185,36 @@ body {
   content: "";
 }
 
+.Chat-controls {
+  display: flex;
+  align-items: center;
+}
+
 .Chat-controls textarea {
-  float: left;
+  flex: 1;
   margin: 0;
-  background-color: #f1f7fb;
-  color: #000000;
-  border: 4px solid #b5cadf;
-  width: calc(100% - 153px);
+  background-color: var(--bg-inner);
+  color: var(--text-primary);
+  border: 4px solid var(--border-color);
   border-radius: 0;
   outline: none;
   padding-left: 10px;
+  caret-shape: block;
 }
 
 .Chat-controls button {
   display: block;
-  float: left;
   margin: 0px 0px 0px 10px;
   padding: 4px 30px 0px 30px;
-  border: 4px solid #b5cadf;
-  background: #fff;
+  border: 4px solid var(--border-color);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+}
+
+.Chat-prompt-easter-egg {
+  color: var(--accent);
+  margin-right: 5px;
+  font-size: 20px;
 }
 
 .Swapchat-logo {
@@ -211,14 +249,13 @@ body {
   .Chat header {
     height: 30px;
     margin-bottom: 0px;
-
     padding-bottom: 10px;
   }
 
   header {
     position: fixed;
     width: 100%;
-    background: #306ff9;
+    background: var(--bg-chat);
   }
 
   .Chat .Chat-controls {
@@ -235,7 +272,7 @@ body {
   .Chat-controls {
     position: fixed;
     width: 100%;
-    background: #306ff9;
+    background: var(--bg-chat);
     bottom: 0;
   }
 
@@ -255,9 +292,129 @@ body {
   }
 
   .Chat-controls textarea {
-    float: left;
     width: calc(100% - 171px);
   }
+}
+
+/*themes*/
+
+:root[data-theme="turbo"] {
+  --bg-body: #000058;
+  --bg-wrapper: #000040;
+  --bg-chat: #0000aa;
+  --bg-inner: #0000aa;
+  --bg-message: #000080;
+  --text-primary: #ffff54;
+  --text-message: #ffff54;
+  --text-header: #ffff54;
+  --border-color: #ffff54;
+  --shadow-color: #000030;
+  --accent: #ffff54;
+  --link-color: #ffff54;
+  --btn-bg: #ffff54;
+  --btn-text: #000080;
+}
+
+:root[data-theme="norton"] {
+  --bg-body: #000000;
+  --bg-wrapper: #000050;
+  --bg-chat: #0000aa;
+  --bg-inner: #0000aa;
+  --bg-message: #008080;
+  --text-primary: #00ffff;
+  --text-message: #ffffff;
+  --text-header: #00ffff;
+  --border-color: #00ffff;
+  --shadow-color: #000050;
+  --accent: #ffff00;
+  --link-color: #00ffff;
+  --btn-bg: #008080;
+  --btn-text: #ffffff;
+}
+
+:root[data-theme="matrix"] {
+  --bg-body: #000000;
+  --bg-wrapper: #000a00;
+  --bg-chat: #001a00;
+  --bg-inner: #000a00;
+  --bg-message: #003300;
+  --text-primary: #00ff00;
+  --text-message: #00ff00;
+  --text-header: #00ff00;
+  --border-color: #005500;
+  --shadow-color: #001a00;
+  --accent: #00ff00;
+  --link-color: #00ff00;
+  --btn-bg: #003300;
+  --btn-text: #00ff00;
+}
+
+:root[data-theme="amber"] {
+  --bg-body: #1a1000;
+  --bg-wrapper: #0d0800;
+  --bg-chat: #2a1800;
+  --bg-inner: #1a1000;
+  --bg-message: #3a2800;
+  --text-primary: #ffaa00;
+  --text-message: #ffaa00;
+  --text-header: #ffaa00;
+  --border-color: #885500;
+  --shadow-color: #0d0800;
+  --accent: #ffaa00;
+  --link-color: #ffaa00;
+  --btn-bg: #3a2800;
+  --btn-text: #ffaa00;
+}
+
+:root[data-theme="cga"] {
+  --bg-body: #000000;
+  --bg-wrapper: #000000;
+  --bg-chat: #000000;
+  --bg-inner: #000000;
+  --bg-message: #aa00aa;
+  --text-primary: #55ffff;
+  --text-message: #ffffff;
+  --text-header: #55ffff;
+  --border-color: #aa00aa;
+  --shadow-color: #550055;
+  --accent: #ff55ff;
+  --link-color: #55ffff;
+  --btn-bg: #aa00aa;
+  --btn-text: #ffffff;
+}
+
+:root[data-theme="neon"] {
+  --bg-body: #000000;
+  --bg-wrapper: #050510;
+  --bg-chat: #0a0a1a;
+  --bg-inner: #050510;
+  --bg-message: #1a0030;
+  --text-primary: #00ffff;
+  --text-message: #ff00ff;
+  --text-header: #00ffff;
+  --border-color: #00ffff;
+  --shadow-color: #00ffff;
+  --accent: #ff00ff;
+  --link-color: #00ffff;
+  --btn-bg: #1a0030;
+  --btn-text: #ff00ff;
+}
+
+:root[data-theme="tron"] {
+  --bg-body: #000000;
+  --bg-wrapper: #050200;
+  --bg-chat: #0a0500;
+  --bg-inner: #050200;
+  --bg-message: #1a0d00;
+  --text-primary: #ff8800;
+  --text-message: #ffaa00;
+  --text-header: #ff8800;
+  --border-color: #ff8800;
+  --shadow-color: #331a00;
+  --accent: #ff8800;
+  --link-color: #ffaa00;
+  --btn-bg: #1a0d00;
+  --btn-text: #ff8800;
 }
 
 /*terms BSOD screen*/
@@ -404,12 +561,11 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: #98b6ef;
+  background: var(--bg-wrapper, #98b6ef);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
-  cursor: pointer;
   outline: none;
 }
 
@@ -431,7 +587,7 @@ body {
 
 @keyframes anim-half {
   50% {
-    background-color: #f0f0f0;
-    border-color: #e50000;
+    background-color: var(--bg-inner, #f0f0f0);
+    border-color: var(--accent, #e50000);
   }
 }

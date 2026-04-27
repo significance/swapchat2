@@ -5,6 +5,8 @@ import QRCode from "qrcode";
 const POLL_TIMEOUT = 1000;
 const REQUIRE_TERMS = import.meta.env.VITE_REQUIRE_TERMS === "true";
 
+const THEMES: string[] = ["classic", "turbo", "norton", "matrix", "amber", "cga", "neon", "tron"];
+
 const Chat = (props: any) => {
   const [sysConversation, setSysConversation] = useState<any>([]);
 
@@ -110,6 +112,35 @@ const Chat = (props: any) => {
   const parseSlashCommands = (message: string) => {
     //display QR code big
     //notarise on X chain
+    if (message.indexOf("/gateway") === 0) {
+      const parts = message.split(" ");
+      if (parts.length < 2 || !parts[1].trim()) {
+        const gw = localStorage.getItem("swapchat_gateway") || props.apiURL;
+        (async () => {
+          try {
+            const res = await fetch(gw + "/health", { signal: AbortSignal.timeout(5000) });
+            if (!res.ok) throw new Error(`${res.status}`);
+            sendSysMessage(`Gateway: ${gw} (OK)`);
+          } catch (e) {
+            sendSysMessage(`Gateway: ${gw} (NOT RESPONDING)`);
+          }
+        })();
+        return true;
+      }
+      const url = parts[1].trim().replace(/\/+$/, "");
+      (async () => {
+        try {
+          const res = await fetch(url + "/health", { signal: AbortSignal.timeout(5000) });
+          if (!res.ok) throw new Error(`${res.status}`);
+          swapChat.Swarm.Bee = new (swapChat.Swarm.Bee.constructor as any)(url);
+          localStorage.setItem("swapchat_gateway", url);
+          sendSysMessage(`Gateway changed to ${url}`);
+        } catch (e) {
+          sendSysMessage(`Gateway ${url} is not reachable`);
+        }
+      })();
+      return true;
+    }
     if (message.indexOf("/reset") === 0) {
       localStorage.clear();
       window.location.reload();
@@ -150,7 +181,11 @@ const Chat = (props: any) => {
         "Help with connection: /help connect",
         "View useful links: /links",
         "Fullscreen QR code: /qr",
+        "Change theme: /theme",
+        "Change gateway: /gateway",
+        "Fullscreen mode: /fs",
         "Clear messages: /clear",
+        "Reset all settings: /reset",
       ];
       helpMessages.forEach((m) => sendSysMessage(m));
       return true;
@@ -189,6 +224,27 @@ const Chat = (props: any) => {
           setShowFullscreenQR(true);
         })();
       }
+      return true;
+    }
+    if (message.indexOf("/theme") === 0) {
+      const parts = message.split(" ");
+      if (parts.length < 2) {
+        const list = THEMES.map(t => `${t === theme ? "* " : "  "}${t}`).join("\n");
+        sendSysMessage(`Themes:\n${list}\n\nUsage: /theme <name>`);
+        return true;
+      }
+      const name = parts[1].toLowerCase().trim();
+      if (THEMES.includes(name)) {
+        setTheme(name);
+        localStorage.setItem("swapchat_theme", name);
+        sendSysMessage(`Theme set to ${name}`);
+      } else {
+        sendSysMessage(`Unknown theme: ${name}`);
+      }
+      return true;
+    }
+    if (message.indexOf("/fullscreen") === 0 || message.indexOf("/fs") === 0) {
+      document.documentElement.requestFullscreen?.();
       return true;
     }
     if (message.indexOf("/d") === 0 && message.length === 3) {
@@ -334,6 +390,11 @@ const Chat = (props: any) => {
 
   const [generatedToken, setGeneratedToken] = useState<string>("");
   const [chatLink, setChatLink] = useState<string>("");
+  const [theme, setTheme] = useState(localStorage.getItem("swapchat_theme") || "classic");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
 
   const [connected, setConnected] = useState<boolean>(false);
   const [gatewayError, setGatewayError] = useState<boolean>(false);
@@ -744,6 +805,7 @@ const Chat = (props: any) => {
       </div>
 
       <div className="Chat-controls">
+        {theme === "tron" && <span className="Chat-prompt-easter-egg">:) </span>}
         <textarea
           ref={messageTextarea}
           rows={1}
