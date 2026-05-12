@@ -1,20 +1,56 @@
-body {
+html, body, #root {
   margin: 0;
+  padding: 0;
+  min-height: 100%;
+  height: 100%;
+  background-color: var(--bg-wrapper, #98b6ef);
+  cursor: none;
+  overflow: hidden;
+}
+
+/* 32x36 pixelated DOS arrow cursor */
+html.show-cursor, html.show-cursor *, html.show-cursor .Chat, html.show-cursor .Chat * {
+  cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAkCAYAAADo6zjiAAAAcklEQVR4nOXWOwoAIQwE0Nz/0m6jjawiaOajA6mE5CEpEhFRatEiA6BBNAAtDIgWgAHRBCAh2gAExAOQCfECZEA8ASch3oATkDsAOxAvwM8Jh11CGAB5qGgB+q99BzBpnA6RAUzfrwasZrSsjwEYg1MBH6lJh7F7qsA7AAAAAElFTkSuQmCC") 0 0, auto !important;
+}
+
+body {
   font-family: DOS, Monaco, Menlo, Consolas, "Courier New", monospace;
   font-size: 25px;
   line-height: 35px;
   color: #ffffff;
-  background-color: #000084;
 }
 
 .Wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  width: 100vw;
-  margin: auto;
-  background: #98b6ef;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--bg-wrapper, #98b6ef);
+  cursor: none;
+}
+
+/*theme defaults*/
+
+:root {
+  --bg-body: #000084;
+  --bg-wrapper: #98b6ef;
+  --bg-chat: #0170f8;
+  --bg-inner: #f1f7fb;
+  --bg-message: #3070f8;
+  --text-primary: #000000;
+  --text-message: #ffffff;
+  --text-header: #ffffff;
+  --border-color: #b5cadf;
+  --shadow-color: #1b4389;
+  --accent: #ff0000;
+  --link-color: #0170f8;
+  --btn-bg: #ffffff;
+  --btn-text: #000000;
+  --bg-qr-light: #ffffff;
 }
 
 /*chat*/
@@ -22,14 +58,21 @@ body {
 .Chat {
   width: 50vw;
   padding: 10px;
-  background: #0170f8;
+  background: var(--bg-chat);
   margin: 0 auto;
-  box-shadow: 10px 10px 0px 0px #1b4389;
+  box-shadow: 10px 10px 0px 0px var(--shadow-color);
+  position: relative;
+  cursor: none;
+}
+
+.Chat, .Chat * {
+  cursor: none;
 }
 
 .Chat header {
   height: 30px;
   margin-bottom: 10px;
+  color: var(--text-header);
 }
 
 .Chat-header-left,
@@ -43,17 +86,38 @@ body {
 }
 
 .Chat-is-connected {
-  color: #ff0000;
+  color: var(--accent);
+}
+
+.Chat-is-error {
+  animation: blink-error 0.5s step-end infinite;
+}
+
+@keyframes blink-error {
+  50% { opacity: 0; }
 }
 
 .Chat-inner {
-  background: #f1f7fb;
+  background: var(--bg-inner);
   height: 300px;
-  overflow: scroll;
-  color: #000;
-  border: 4px solid #b5cadf;
+  overflow: auto;
+  color: var(--text-primary);
+  border: 4px solid var(--border-color);
   margin-bottom: 10px;
   text-align: center;
+  scrollbar-color: var(--border-color) var(--bg-inner);
+}
+
+.Chat-inner::-webkit-scrollbar {
+  width: 8px;
+}
+
+.Chat-inner::-webkit-scrollbar-track {
+  background: var(--bg-inner);
+}
+
+.Chat-inner::-webkit-scrollbar-thumb {
+  background: var(--border-color);
 }
 
 /*element*/
@@ -102,8 +166,8 @@ body {
 
 .Chat-code-meta li a {
   text-decoration: none;
-  color: #0170f8;
-  cursor: pointer;
+  color: var(--link-color);
+  cursor: none;
 }
 
 .Chat-code-meta li img {
@@ -113,13 +177,13 @@ body {
 }
 
 .Chat-code-verification {
-  color: #ff0000;
+  color: var(--accent);
   margin-bottom: 10px;
 }
 
 .Chat-message {
-  color: #fff;
-  background: #3070f8;
+  color: var(--text-message);
+  background: var(--bg-message);
   display: inline-block;
   padding: 10px 25px;
   margin: 0px 20px 10px 20px;
@@ -148,25 +212,36 @@ body {
   content: "";
 }
 
+.Chat-controls {
+  display: flex;
+  align-items: center;
+}
+
 .Chat-controls textarea {
-  float: left;
+  flex: 1;
   margin: 0;
-  background-color: #f1f7fb;
-  color: #000000;
-  border: 4px solid #b5cadf;
-  width: calc(100% - 153px);
+  background-color: var(--bg-inner);
+  color: var(--text-primary);
+  border: 4px solid var(--border-color);
   border-radius: 0;
   outline: none;
   padding-left: 10px;
+  caret-shape: block;
 }
 
 .Chat-controls button {
   display: block;
-  float: left;
   margin: 0px 0px 0px 10px;
   padding: 4px 30px 0px 30px;
-  border: 4px solid #b5cadf;
-  background: #fff;
+  border: 4px solid var(--border-color);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+}
+
+.Chat-prompt-easter-egg {
+  color: var(--accent);
+  margin-right: 5px;
+  font-size: 20px;
 }
 
 .Swapchat-logo {
@@ -201,14 +276,13 @@ body {
   .Chat header {
     height: 30px;
     margin-bottom: 0px;
-
     padding-bottom: 10px;
   }
 
   header {
     position: fixed;
     width: 100%;
-    background: #306ff9;
+    background: var(--bg-chat);
   }
 
   .Chat .Chat-controls {
@@ -225,7 +299,7 @@ body {
   .Chat-controls {
     position: fixed;
     width: 100%;
-    background: #306ff9;
+    background: var(--bg-chat);
     bottom: 0;
   }
 
@@ -245,9 +319,294 @@ body {
   }
 
   .Chat-controls textarea {
-    float: left;
     width: calc(100% - 171px);
   }
+}
+
+/*themes*/
+
+/* dark themes use their bg for QR light modules */
+:root[data-theme="turbo"] {
+  --bg-body: #000058;
+  --bg-wrapper: #000040;
+  --bg-chat: #0000aa;
+  --bg-inner: #0000aa;
+  --bg-message: #000080;
+  --text-primary: #ffff54;
+  --text-message: #ffff54;
+  --text-header: #ffff54;
+  --border-color: #ffff54;
+  --shadow-color: #000030;
+  --accent: #ffff54;
+  --link-color: #ffff54;
+  --btn-bg: #ffff54;
+  --btn-text: #000080;
+  --bg-qr-light: #0000aa;
+}
+
+:root[data-theme="norton"] {
+  --bg-body: #000000;
+  --bg-wrapper: #000050;
+  --bg-chat: #0000aa;
+  --bg-inner: #0000aa;
+  --bg-message: #008080;
+  --text-primary: #00ffff;
+  --text-message: #ffffff;
+  --text-header: #00ffff;
+  --border-color: #00ffff;
+  --shadow-color: #000050;
+  --accent: #ffff00;
+  --link-color: #00ffff;
+  --btn-bg: #008080;
+  --btn-text: #ffffff;
+  --bg-qr-light: #0000aa;
+}
+
+:root[data-theme="matrix"] {
+  --bg-body: #000000;
+  --bg-wrapper: #000a00;
+  --bg-chat: #001a00;
+  --bg-inner: #000a00;
+  --bg-message: #003300;
+  --text-primary: #00ff00;
+  --text-message: #00ff00;
+  --text-header: #00ff00;
+  --border-color: #005500;
+  --shadow-color: #001a00;
+  --accent: #00ff00;
+  --link-color: #00ff00;
+  --btn-bg: #003300;
+  --btn-text: #00ff00;
+  --bg-qr-light: #000a00;
+}
+
+:root[data-theme="amber"] {
+  --bg-body: #1a1000;
+  --bg-wrapper: #0d0800;
+  --bg-chat: #2a1800;
+  --bg-inner: #1a1000;
+  --bg-message: #3a2800;
+  --text-primary: #ffaa00;
+  --text-message: #ffaa00;
+  --text-header: #ffaa00;
+  --border-color: #885500;
+  --shadow-color: #0d0800;
+  --accent: #ffaa00;
+  --link-color: #ffaa00;
+  --btn-bg: #3a2800;
+  --btn-text: #ffaa00;
+  --bg-qr-light: #1a1000;
+}
+
+:root[data-theme="cga"] {
+  --bg-body: #000000;
+  --bg-wrapper: #000000;
+  --bg-chat: #000000;
+  --bg-inner: #000000;
+  --bg-message: #aa00aa;
+  --text-primary: #55ffff;
+  --text-message: #ffffff;
+  --text-header: #55ffff;
+  --border-color: #aa00aa;
+  --shadow-color: #000000;
+  --accent: #ff55ff;
+  --link-color: #55ffff;
+  --btn-bg: #aa00aa;
+  --btn-text: #ffffff;
+  --bg-qr-light: #000000;
+}
+
+:root[data-theme="neon"] {
+  --bg-body: #000000;
+  --bg-wrapper: #050510;
+  --bg-chat: #0a0a1a;
+  --bg-inner: #050510;
+  --bg-message: #1a0030;
+  --text-primary: #00ffff;
+  --text-message: #ff00ff;
+  --text-header: #00ffff;
+  --border-color: #00ffff;
+  --shadow-color: #00ffff;
+  --accent: #ff00ff;
+  --link-color: #00ffff;
+  --btn-bg: #1a0030;
+  --btn-text: #ff00ff;
+  --bg-qr-light: #050510;
+}
+
+:root[data-theme="tron"] {
+  --bg-body: #000000;
+  --bg-wrapper: #050200;
+  --bg-chat: #0a0500;
+  --bg-inner: #050200;
+  --bg-message: #1a0d00;
+  --text-primary: #ff8800;
+  --text-message: #ffaa00;
+  --text-header: #ff8800;
+  --border-color: #ff8800;
+  --shadow-color: #331a00;
+  --accent: #ff8800;
+  --link-color: #ffaa00;
+  --btn-bg: #1a0d00;
+  --btn-text: #ff8800;
+}
+
+/*terms BSOD screen*/
+
+.Terms-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000084;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  outline: none;
+}
+
+.Terms-content {
+  text-align: center;
+  color: #ffffff;
+}
+
+.Terms-title {
+  font-size: 32px;
+  line-height: 45px;
+  margin-bottom: 10px;
+}
+
+.Terms-strapline {
+  font-size: 20px;
+  line-height: 30px;
+  margin-bottom: 40px;
+  color: #b0b0b0;
+}
+
+.Terms-prompt {
+  font-size: 28px;
+  line-height: 40px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  background: #a8a8a8;
+  color: #000084;
+  display: inline-block;
+  padding: 2px 15px;
+}
+
+.Terms-hint {
+  font-size: 18px;
+  line-height: 28px;
+  color: #6080c0;
+  margin-top: 20px;
+}
+
+.Terms-reader {
+  max-width: 600px;
+  text-align: left;
+}
+
+.Terms-reader-text {
+  font-size: 16px;
+  line-height: 26px;
+  color: #d0d0d0;
+  white-space: pre-wrap;
+  margin-bottom: 30px;
+}
+
+.Terms-reader-nav {
+  font-size: 16px;
+  line-height: 26px;
+  color: #6080c0;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.Terms-reader .Terms-prompt {
+  display: block;
+  text-align: center;
+}
+
+.Terms-reader .Terms-hint {
+  text-align: center;
+}
+
+.Key-input-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 30px 0 10px 0;
+}
+
+.Key-prompt {
+  color: #a8a8a8;
+  font-size: 24px;
+  margin-right: 5px;
+}
+
+.Key-input {
+  background: #000060;
+  border: 2px solid #6080c0;
+  color: #ffffff;
+  font-family: DOS, Monaco, Menlo, Consolas, monospace;
+  font-size: 18px;
+  padding: 8px 12px;
+  width: 500px;
+  max-width: 80vw;
+  outline: none;
+  letter-spacing: 2px;
+}
+
+.Key-input:focus {
+  border-color: #a8a8a8;
+}
+
+.Key-input::placeholder {
+  color: #405080;
+}
+
+.Key-warning {
+  color: #4488ff;
+  font-size: 18px;
+  line-height: 28px;
+  margin-top: 20px;
+  margin-bottom: -5px;
+  text-align: center;
+  white-space: pre-wrap;
+  background: #000060;
+  padding: 8px 15px;
+  display: inline-block;
+}
+
+.Key-error {
+  color: #ff4444;
+  font-size: 16px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/*fullscreen qr*/
+
+.QR-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg-wrapper, #98b6ef);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  outline: none;
+}
+
+.QR-fullscreen img {
+  max-width: 90%;
+  max-height: 90%;
+  image-rendering: pixelated;
 }
 
 /*animation*/
@@ -262,7 +621,7 @@ body {
 
 @keyframes anim-half {
   50% {
-    background-color: #f0f0f0;
-    border-color: #e50000;
+    background-color: var(--bg-inner, #f0f0f0);
+    border-color: var(--accent, #e50000);
   }
 }

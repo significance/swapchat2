@@ -1,4 +1,3 @@
-import React from "react";
 import "normalize.css";
 import "./App.css";
 
@@ -6,14 +5,16 @@ import { useLocation } from "react-router-dom";
 
 import Chat from "./components/Chat";
 
-const apiURL = process.env.REACT_APP_BEE_API;
-const debugURL = process.env.REACT_APP_BEE_DEBUG_API;
-const gatewayMode = process.env.REACT_APP_BEE_GATEWAY_MODE === "true";
+const apiURL = import.meta.env.VITE_BEE_API;
+const gatewayMode = import.meta.env.VITE_BEE_GATEWAY_MODE === "true";
+const stamp = import.meta.env.VITE_BEE_STAMP;
+const signerKey = import.meta.env.VITE_BEE_SIGNER_KEY;
+const stampDepth = parseInt(import.meta.env.VITE_BEE_STAMP_DEPTH || "20");
 
 function App() {
   const search = useLocation().search;
   const token = new URLSearchParams(search).get("token");
-  const chatRole = token && token.length === 194 ? "respondent" : "initiator";
+  const chatRole = token && token.length > 100 ? "respondent" : "initiator";
 
   return (
     <div className="Wrapper">
@@ -21,8 +22,11 @@ function App() {
         chatRole={chatRole}
         token={token}
         apiURL={apiURL}
-        debugURL={debugURL}
         gatewayMode={gatewayMode}
+        stamp={stamp}
+        signerKey={signerKey}
+        stampDepth={stampDepth}
+        socGatewayURL={apiURL}
       />
     </div>
   );
