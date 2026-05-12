@@ -150,14 +150,14 @@ const Chat = (props: any) => {
       clearConversations();
       return true;
     }
-    if (message.indexOf("/copy code") === 0) {
+    if (message === "/copy code" || message === "/code") {
       if (chatRole === "respondent") {
         return true;
       }
       copyCodeToClipboard(false);
       return true;
     }
-    if (message.indexOf("/copy link") === 0) {
+    if (message === "/copy link" || message === "/link") {
       if (chatRole === "respondent") {
         return true;
       }
@@ -180,9 +180,13 @@ const Chat = (props: any) => {
       let helpMessages = [
         "Help with connection: /help connect",
         "View useful links: /links",
+        "Copy invite code: /code",
+        "Copy invite link: /link",
+        "Open as respondent: /d",
         "Fullscreen QR code: /qr",
         "Change theme: /theme",
         "Change gateway: /gateway",
+        "Toggle cursor: /cursor",
         "Fullscreen mode: /fs",
         "Clear messages: /clear",
         "Reset all settings: /reset",
@@ -248,11 +252,17 @@ const Chat = (props: any) => {
       document.documentElement.requestFullscreen?.();
       return true;
     }
-    if (message.indexOf("/d") === 0 && message.length === 3) {
-      if (chatRole === "initiator") {
+    if (message === "/cursor") {
+      document.documentElement.classList.toggle("show-cursor");
+      return true;
+    }
+    if (message === "/d") {
+      if (chatLink) {
         window.open(chatLink, "_blank");
-        return true;
+      } else {
+        sendSysMessage("No chat link available yet.");
       }
+      return true;
     }
     if (message.indexOf("/") === 0) {
       return true;
@@ -299,7 +309,9 @@ const Chat = (props: any) => {
       connected === true &&
       message !== ""
     ) {
-      await swapChat.send(message);
+      const sanitised = message.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, "").trim();
+      if (sanitised === "") return;
+      await swapChat.send(sanitised);
       // Save stamp bucket state after each send
       try {
         const state = swapChat.Swarm.getStampState?.();
@@ -366,7 +378,8 @@ const Chat = (props: any) => {
       props.apiURL,
       messageWasReceived,
       props.gatewayMode,
-      POLL_TIMEOUT
+      POLL_TIMEOUT,
+      props.socGatewayURL
     );
     if (savedBatchId) {
       sc.BatchID = savedBatchId;

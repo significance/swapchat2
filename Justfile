@@ -38,21 +38,28 @@ check-stamp id=STAMP_ID:
 buy-stamp amount=STAMP_AMOUNT depth=STAMP_DEPTH:
     #!/usr/bin/env bash
     set -e
-    ADDR=$(cast wallet address --private-key $VITE_BEE_SIGNER_KEY 2>/dev/null)
+    export FOUNDRY_DISABLE_NIGHTLY_WARNING=1
+    ADDR=$(cast wallet address --private-key $VITE_BEE_SIGNER_KEY)
     TOTAL_COST=$(python3 -c "print({{amount}} * (2 ** {{depth}}))")
     echo "Signer: $ADDR"
     echo "Cost:   $TOTAL_COST BZZ-plurs (amount={{amount}} depth={{depth}})"
     echo ""
     echo "Approving BZZ spend..."
     cast send {{BZZ}} "approve(address,uint256)" {{POSTAGE}} $TOTAL_COST \
-        --private-key $VITE_BEE_SIGNER_KEY --rpc-url {{RPC}} --quiet 2>/dev/null
+        --private-key $VITE_BEE_SIGNER_KEY --rpc-url {{RPC}} --quiet
     NONCE=$(openssl rand -hex 32)
     echo "Buying stamp (nonce=$NONCE)..."
     TX=$(cast send {{POSTAGE}} \
         "createBatch(address,uint256,uint8,uint8,bytes32,bool)" \
         $ADDR {{amount}} {{depth}} {{BUCKET_DEPTH}} 0x$NONCE false \
-        --private-key $VITE_BEE_SIGNER_KEY --rpc-url {{RPC}} --json 2>/dev/null)
-    BATCH_ID=$(echo $TX | python3 -c "
+        --private-key $VITE_BEE_SIGNER_KEY --rpc-url {{RPC}} --gas-limit 2000000 --json)
+    STATUS=$(echo "$TX" | python3 -c "import json,sys; print(json.load(sys.stdin).get('status',''))")
+    if [ "$STATUS" != "0x1" ]; then
+        echo "TX FAILED (status=$STATUS)"
+        echo "$TX" | python3 -m json.tool
+        exit 1
+    fi
+    BATCH_ID=$(echo "$TX" | python3 -c "
     import json,sys
     tx = json.load(sys.stdin)
     for log in tx['logs']:
@@ -60,6 +67,11 @@ buy-stamp amount=STAMP_AMOUNT depth=STAMP_DEPTH:
             print(log['topics'][1][2:])
             break
     ")
+    if [ -z "$BATCH_ID" ]; then
+        echo "Could not extract batch ID from logs"
+        echo "$TX" | python3 -m json.tool
+        exit 1
+    fi
     echo ""
     echo "Batch ID: $BATCH_ID"
     echo ""

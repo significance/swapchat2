@@ -26,6 +26,7 @@ function App() {
         stamp={stamp}
         signerKey={signerKey}
         stampDepth={stampDepth}
+        socGatewayURL={apiURL}
       />
     </div>
   );

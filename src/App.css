@@ -8,6 +8,11 @@ html, body, #root {
   overflow: hidden;
 }
 
+/* 32x36 pixelated DOS arrow cursor */
+html.show-cursor, html.show-cursor *, html.show-cursor .Chat, html.show-cursor .Chat * {
+  cursor: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAkCAYAAADo6zjiAAAAcklEQVR4nOXWOwoAIQwE0Nz/0m6jjawiaOajA6mE5CEpEhFRatEiA6BBNAAtDIgWgAHRBCAh2gAExAOQCfECZEA8ASch3oATkDsAOxAvwM8Jh11CGAB5qGgB+q99BzBpnA6RAUzfrwasZrSsjwEYg1MBH6lJh7F7qsA7AAAAAElFTkSuQmCC") 0 0, auto !important;
+}
+
 body {
   font-family: DOS, Monaco, Menlo, Consolas, "Courier New", monospace;
   font-size: 25px;
