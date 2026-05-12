@@ -379,7 +379,8 @@ const Chat = (props: any) => {
       messageWasReceived,
       props.gatewayMode,
       POLL_TIMEOUT,
-      props.socGatewayURL
+      props.socGatewayURL,
+      props.gatewayMode ? undefined : POLL_TIMEOUT
     );
     if (savedBatchId) {
       sc.BatchID = savedBatchId;

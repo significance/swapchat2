@@ -13,7 +13,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.2.1",
     "stream-browserify": "^3.0.0",
-    "swapchat": "github:significance/swapchat-engine#e849bff"
+    "swapchat": "github:significance/swapchat-engine#0755b54"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
