@@ -13,13 +13,14 @@ npm install
 npm run dev
 ```
 
-Requires a Bee node with CORS enabled and the [SOC detection fix](https://github.com/significance/bee/tree/fix/soc-chunk-detection).
+Works with the public Swarm gateway (`api.gateway.ethswarm.org`) or a local Bee node.
 
 #### Setup
 
 Copy `.env.example` to `.env` and configure:
 
-- `VITE_BEE_API` — Bee node URL (default: `http://localhost:1633`)
+- `VITE_BEE_API` — Bee node or gateway URL (default: `https://api.gateway.ethswarm.org`)
+- `VITE_BEE_GATEWAY_MODE` — Use zero stamp for public gateways (`true`/`false`)
 - `VITE_BEE_SIGNER_KEY` — Private key for client-side stamp signing (optional, prompted in UI)
 - `VITE_BEE_STAMP` — Postage batch ID (optional, prompted in UI)
 - `VITE_BEE_STAMP_DEPTH` — Stamp depth (default: 20)
@@ -49,8 +50,10 @@ Requires [just](https://github.com/casey/just) and [foundry](https://getfoundry.
 | `/gateway` | Check current gateway |
 | `/gateway <url>` | Switch gateway |
 | `/fs` | Fullscreen mode |
-| `/copy code` | Copy token to clipboard |
-| `/copy link` | Copy chat link |
+| `/code` | Copy token to clipboard |
+| `/link` | Copy chat link |
+| `/d` | Open as respondent in new tab |
+| `/cursor` | Toggle DOS cursor |
 | `/links` | Useful links |
 | `/clear` | Clear messages |
 | `/reset` | Clear all settings and reload |
@@ -76,6 +79,7 @@ npm run test:e2e:headed           # watch in browser
 
 - Vite 6, React 18, TypeScript 5, Node 22
 - Hybrid PQ encryption: ECDH + ML-KEM-768 via HKDF-SHA256
+- SOC endpoint uploads (`/soc/{owner}/{id}`), all signing client-side
 - Client-side postage stamp construction
 - 8 DOS colour themes
 - Playwright e2e tests
