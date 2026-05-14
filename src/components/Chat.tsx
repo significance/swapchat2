@@ -83,12 +83,13 @@ const Chat = (props: any) => {
   const [termsPage, setTermsPage] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const savedSignerKey = props.signerKey || localStorage.getItem("swapchat_signerKey") || "";
+  const savedBatchId = props.stamp || localStorage.getItem("swapchat_batchId") || "";
+  const [stampsLoaded, setStampsLoaded] = useState(!!(savedSignerKey && savedBatchId));
+
   const advanceSetup = () => {
     setSetupStage(getSetupStage());
   };
-
-  const savedSignerKey = props.signerKey || localStorage.getItem("swapchat_signerKey") || "";
-  const savedBatchId = props.stamp || localStorage.getItem("swapchat_batchId") || "";
 
   const termsPages = [
     "SWAPCHAT TERMS OF USE (APR 2026)\n\nSwapchat is an educational and evaluation tool developed by 1up.digital. It is built on Ethereum Swarm, a decentralized peer-to-peer storage and communication network.\n\nSwapchat is provided for testing and evaluation purposes only. It is not intended for production use. It is provided AS IS, at no charge, with no warranty of any kind.",
@@ -124,6 +125,7 @@ const Chat = (props: any) => {
         localStorage.setItem("swapchat_batchId", book.batchId);
         localStorage.setItem("swapchat_bookOfStamps", text);
 
+        setStampsLoaded(true);
         sendSysMessage(`Book of stamps loaded (${book.batchId.slice(0, 8)}\u2026). Use /code or /link to start a chat.`);
       } catch (err: any) {
         sendSysMessage(`Failed to load book of stamps: ${err.message}`);
@@ -567,78 +569,83 @@ const Chat = (props: any) => {
   }, []);
 
   // Chat initialization — runs when setup completes
-  const [chatStarted, setChatStarted] = useState(false);
-  useEffect(
-    () => {
-      if (setupStage !== "ready" || chatStarted) return;
-      setChatStarted(true);
-      focusTextbox();
+  // Show welcome prompt when setup is ready but no stamps
+  const [welcomeShown, setWelcomeShown] = useState(false);
+  useEffect(() => {
+    if (setupStage !== "ready" || welcomeShown) return;
+    setWelcomeShown(true);
+    focusTextbox();
 
-      // Validate saved stamp on reload
-      if (swapChat.Swarm.ClientStamper) {
-        (async () => {
-          const valid = await swapChat.Swarm.validateStampBatch();
-          if (!valid) {
-            localStorage.removeItem("swapchat_batchId");
-            localStorage.removeItem("swapchat_stampState");
-            localStorage.removeItem("swapchat_bookOfStamps");
-            sendSysMessage("Previous book of stamps has expired. Use /stamps to load a new one.");
-          }
-        })();
-      }
+    if (!stampsLoaded && props.chatRole === "initiator") {
+      sendSysMessage("Use /stamps to load a book of stamps.");
+    }
 
-      if (props.chatRole === "initiator") {
-          (async () => {
-            if (!swapChat.BatchID) {
-              sendSysMessage("Use /stamps to load a book of stamps, then /code or /link to start a chat.");
-            } else {
-              sendSysMessage("Type /help for help :)");
-            }
-            await swapChat.initiate();
-
-            const gt = swapChat.getToken();
-            setGeneratedToken(gt);
-
-            const cl = `${window.location.origin}/?token=${gt}`;
-            setChatLink(cl);
-
-            let qrCodeData = await generateQRCode(cl);
-
-            setCurrentQRCodeData(qrCodeData);
-
-            await swapChat.waitForRespondentHandshakeChunk();
-
-            // Save stamp state after handshake
-            try {
-              const state = swapChat.Swarm.getStampState?.();
-              if (state) localStorage.setItem("swapchat_stampState", JSON.stringify(Array.from(state)));
-            } catch (e) {}
-
-            sendSysMessage("Connected!");
-
-            if (swapChat.SecretCode !== undefined) {
-              setSecretCode(swapChat.SecretCode.toString("hex").slice(0, 6));
-            }
-            setConnected(true);
-          })();
-        } else {
-          (async () => {
-            swapChat.respond(props.token);
-            await swapChat.waitForInitiatorHandshakeChunk();
-            sendSysMessage("Type /help for help :)");
-
-            sendSysMessage("Connected!");
-
-            if (swapChat.SecretCode !== undefined) {
-              setSecretCode(swapChat.SecretCode.toString("hex").slice(0, 6));
-            }
-            setConnected(true);
-          })();
+    // Validate saved stamp on reload
+    if (swapChat.Swarm.ClientStamper) {
+      (async () => {
+        const valid = await swapChat.Swarm.validateStampBatch();
+        if (!valid) {
+          localStorage.removeItem("swapchat_batchId");
+          localStorage.removeItem("swapchat_stampState");
+          localStorage.removeItem("swapchat_bookOfStamps");
+          setStampsLoaded(false);
+          sendSysMessage("Previous book of stamps has expired. Use /stamps to load a new one.");
         }
-    },
+      })();
+    }
+
+    // Respondent doesn't need stamps — start immediately
+    if (props.chatRole === "respondent") {
+      (async () => {
+        swapChat.respond(props.token);
+        await swapChat.waitForInitiatorHandshakeChunk();
+        sendSysMessage("Type /help for help :)");
+        sendSysMessage("Connected!");
+        if (swapChat.SecretCode !== undefined) {
+          setSecretCode(swapChat.SecretCode.toString("hex").slice(0, 6));
+        }
+        setConnected(true);
+      })();
+    }
     //eslint-disable-next-line react-hooks/exhaustive-deps
-    [setupStage]
-  );
+  }, [setupStage]);
+
+  // Initiator: start chat when stamps become available
+  const [chatStarted, setChatStarted] = useState(false);
+  useEffect(() => {
+    if (props.chatRole !== "initiator") return;
+    if (!stampsLoaded || chatStarted) return;
+    if (setupStage !== "ready") return;
+    setChatStarted(true);
+
+    (async () => {
+      sendSysMessage("Type /help for help :)");
+      await swapChat.initiate();
+
+      const gt = swapChat.getToken();
+      setGeneratedToken(gt);
+
+      const cl = `${window.location.origin}/?token=${gt}`;
+      setChatLink(cl);
+
+      let qrCodeData = await generateQRCode(cl);
+      setCurrentQRCodeData(qrCodeData);
+
+      await swapChat.waitForRespondentHandshakeChunk();
+
+      try {
+        const state = swapChat.Swarm.getStampState?.();
+        if (state) localStorage.setItem("swapchat_stampState", JSON.stringify(Array.from(state)));
+      } catch (e) {}
+
+      sendSysMessage("Connected!");
+      if (swapChat.SecretCode !== undefined) {
+        setSecretCode(swapChat.SecretCode.toString("hex").slice(0, 6));
+      }
+      setConnected(true);
+    })();
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stampsLoaded, setupStage]);
 
   // Gateway health check — runs every 30s when connected
   useEffect(() => {
@@ -784,7 +791,20 @@ const Chat = (props: any) => {
       </header>
 
       <div className="Chat-inner" ref={chatInner}>
-        {chatRole === "initiator" && (
+        {chatRole === "initiator" && !stampsLoaded && (
+          <div>
+            <div className="Chat-welcome">** Welcome to SWAPCHAT **</div>
+            <div className="Chat-code">
+              <div className="Chat-code-qr" style={{cursor: 'pointer'}} onClick={() => fileInputRef.current?.click()}>
+                <div style={{padding: '20px', textAlign: 'center', opacity: 0.7, fontSize: '0.85rem'}}>
+                  Type /stamps or click here to load a book of stamps
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {chatRole === "initiator" && stampsLoaded && (
           <div>
             <div className="Chat-welcome">** Welcome to SWAPCHAT **</div>
             <div className="Chat-code">
