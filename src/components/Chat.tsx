@@ -190,14 +190,10 @@ const Chat = (props: any) => {
         sendSysMessage("No book of stamps loaded.");
         return true;
       }
-      // Get current stamp usage
-      let usage = `0/${1 << (swapChat.StampDepth || 20)}`;
+      let buckets: Uint32Array | null = null;
       try {
         const state = swapChat.Swarm.getStampState?.();
-        if (state) {
-          const total = state.reduce((a: number, b: number) => a + b, 0);
-          usage = `${total}/${1 << (swapChat.StampDepth || 20)}`;
-        }
+        if (state) buckets = state;
       } catch {}
       const keyBytes = hexToBytes(signerKey);
       const owner = swapChat.Swarm.Bee ? toHex(keyBytes).slice(0, 40) : signerKey.slice(0, 40);
@@ -209,7 +205,7 @@ const Chat = (props: any) => {
         bucketDepth: 16,
         amount: 1_000_000_000n,
         privateKey: keyBytes,
-        usage,
+        buckets,
       });
       const ts = new Date().toISOString().slice(0, 19).replace(/:/g, "-") + "Z";
       const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
