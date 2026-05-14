@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import SwapChat from "swapchat";
 import QRCode from "qrcode";
+import { deserializeStampBook, serializeStampBook, toHex, hexToBytes } from "../utils/stampbook";
 
 const POLL_TIMEOUT = 1000;
 const REQUIRE_TERMS = import.meta.env.VITE_REQUIRE_TERMS === "true";
@@ -74,18 +75,13 @@ const Chat = (props: any) => {
 
   const getSetupStage = () => {
     if (REQUIRE_TERMS && localStorage.getItem("didAcceptTerms") !== "true") return "terms";
-    if (!(props.signerKey || localStorage.getItem("swapchat_signerKey"))) return "signerKey";
-    if (!(props.stamp || localStorage.getItem("swapchat_batchId"))) return "batchId";
     return "ready";
   };
 
   const [setupStage, setSetupStage] = useState(getSetupStage);
   const [termsReadMode, setTermsReadMode] = useState(false);
   const [termsPage, setTermsPage] = useState(0);
-  const [keyInput, setKeyInput] = useState("");
-  const [keyError, setKeyError] = useState("");
-  const [batchInput, setBatchInput] = useState("");
-  const [batchError, setBatchError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const advanceSetup = () => {
     setSetupStage(getSetupStage());
@@ -105,6 +101,37 @@ const Chat = (props: any) => {
     setOwnConversation([]);
     setOtherConversation([]);
     setSysConversation([]);
+  };
+
+  const handleStampFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const text = reader.result as string;
+        const book = deserializeStampBook(text);
+        const hexKey = toHex(book.privateKey);
+
+        // Configure engine
+        swapChat.SignerKey = hexKey;
+        swapChat.BatchID = book.batchId;
+        swapChat.StampDepth = book.depth;
+        swapChat.Swarm.useClientStamp(hexKey, book.batchId, book.depth);
+
+        // Persist to localStorage
+        localStorage.setItem("swapchat_signerKey", hexKey);
+        localStorage.setItem("swapchat_batchId", book.batchId);
+        localStorage.setItem("swapchat_bookOfStamps", text);
+
+        sendSysMessage(`Book of stamps loaded (${book.batchId.slice(0, 8)}\u2026). Use /code or /link to start a chat.`);
+      } catch (err: any) {
+        sendSysMessage(`Failed to load book of stamps: ${err.message}`);
+      }
+      // Reset the input so the same file can be re-selected
+      e.target.value = "";
+    };
+    reader.readAsText(file);
   };
 
   const [ownConversation, setOwnConversation] = useState<any>([]);
@@ -150,8 +177,64 @@ const Chat = (props: any) => {
       clearConversations();
       return true;
     }
+    if (message === "/stamps") {
+      fileInputRef.current?.click();
+      return true;
+    }
+    if (message === "/eject") {
+      const signerKey = swapChat.SignerKey || localStorage.getItem("swapchat_signerKey");
+      const batchId = swapChat.BatchID || localStorage.getItem("swapchat_batchId");
+      if (!signerKey || !batchId) {
+        sendSysMessage("No book of stamps loaded.");
+        return true;
+      }
+      // Get current stamp usage
+      let usage = `0/${1 << (swapChat.StampDepth || 20)}`;
+      try {
+        const state = swapChat.Swarm.getStampState?.();
+        if (state) {
+          const total = state.reduce((a: number, b: number) => a + b, 0);
+          usage = `${total}/${1 << (swapChat.StampDepth || 20)}`;
+        }
+      } catch {}
+      const keyBytes = hexToBytes(signerKey);
+      const owner = swapChat.Swarm.Bee ? toHex(keyBytes).slice(0, 40) : signerKey.slice(0, 40);
+      const content = serializeStampBook({
+        version: 1,
+        batchId,
+        owner,
+        depth: swapChat.StampDepth || 20,
+        bucketDepth: 16,
+        amount: 1_000_000_000n,
+        privateKey: keyBytes,
+        usage,
+      });
+      const ts = new Date().toISOString().slice(0, 19).replace(/:/g, "-") + "Z";
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `book-of-stamps-${batchId.slice(0, 8)}-${ts}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+      // Clear from localStorage and engine
+      localStorage.removeItem("swapchat_signerKey");
+      localStorage.removeItem("swapchat_batchId");
+      localStorage.removeItem("swapchat_stampState");
+      localStorage.removeItem("swapchat_bookOfStamps");
+      swapChat.SignerKey = undefined;
+      swapChat.BatchID = undefined;
+      sendSysMessage(`Book of stamps ejected (${batchId.slice(0, 8)}\u2026). Use /stamps to load a new one.`);
+      return true;
+    }
     if (message === "/copy code" || message === "/code") {
       if (chatRole === "respondent") {
+        return true;
+      }
+      if (!swapChat.BatchID) {
+        sendSysMessage("Load a book of stamps first with /stamps");
         return true;
       }
       copyCodeToClipboard(false);
@@ -159,6 +242,10 @@ const Chat = (props: any) => {
     }
     if (message === "/copy link" || message === "/link") {
       if (chatRole === "respondent") {
+        return true;
+      }
+      if (!swapChat.BatchID) {
+        sendSysMessage("Load a book of stamps first with /stamps");
         return true;
       }
       copyLinkToClipboard(false);
@@ -178,6 +265,8 @@ const Chat = (props: any) => {
         "Swapchat is brought to you by 1UP.digital and the irrepressible Swarm.";
       sendSysMessage(helpMessage);
       let helpMessages = [
+        "Load book of stamps: /stamps",
+        "Eject book of stamps: /eject",
         "Help with connection: /help connect",
         "View useful links: /links",
         "Copy invite code: /code",
@@ -492,15 +581,19 @@ const Chat = (props: any) => {
           if (!valid) {
             localStorage.removeItem("swapchat_batchId");
             localStorage.removeItem("swapchat_stampState");
-            setSetupStage("batchId");
-            setChatStarted(false);
+            localStorage.removeItem("swapchat_bookOfStamps");
+            sendSysMessage("Previous book of stamps has expired. Use /stamps to load a new one.");
           }
         })();
       }
 
       if (props.chatRole === "initiator") {
           (async () => {
-            sendSysMessage("Type /help for help :)");
+            if (!swapChat.BatchID) {
+              sendSysMessage("Use /stamps to load a book of stamps, then /code or /link to start a chat.");
+            } else {
+              sendSysMessage("Type /help for help :)");
+            }
             await swapChat.initiate();
 
             const gt = swapChat.getToken();
@@ -660,88 +753,6 @@ const Chat = (props: any) => {
           )}
         </div>
       )}
-      {setupStage === "signerKey" && (
-        <div className="Terms-screen" tabIndex={0}>
-          <div className="Terms-content">
-            <div className="Terms-title">Wallet Configuration</div>
-            <div className="Terms-strapline">
-              Enter the private key for an account{"\n"}which has a usable stamp
-            </div>
-            <div className="Key-warning">
-              Warning: use a burner key only!{"\n"}A webpage is not a secure way to handle{"\n"}important key material!!
-            </div>
-            <div className="Key-input-row">
-              <span className="Key-prompt">&gt; </span>
-              <input
-                className="Key-input"
-                type="password"
-                ref={(el) => el?.focus()}
-                value={keyInput}
-                onChange={(e) => { setKeyInput(e.target.value.replace(/^0x/, "")); setKeyError(""); }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && keyInput.length === 64) {
-                    localStorage.setItem("swapchat_signerKey", keyInput);
-                    swapChat.SignerKey = keyInput;
-                    advanceSetup();
-                  } else if (e.key === "Enter" && keyInput.length > 0) {
-                    setKeyError("Key must be 64 hex characters");
-                  }
-                }}
-                placeholder="64 character hex private key"
-                maxLength={64}
-                spellCheck={false}
-                autoComplete="off"
-              />
-            </div>
-            {keyError && <div className="Key-error">{keyError}</div>}
-            <div className="Terms-hint">{keyInput.length}/64 characters</div>
-          </div>
-        </div>
-      )}
-      {setupStage === "batchId" && (
-        <div className="Terms-screen" tabIndex={0}>
-          <div className="Terms-content">
-            <div className="Terms-title">Stamp Configuration</div>
-            <div className="Terms-strapline">Enter the postage batch ID</div>
-            <div className="Key-input-row">
-              <span className="Key-prompt">&gt; </span>
-              <input
-                className="Key-input"
-                type="text"
-                ref={(el) => el?.focus()}
-                value={batchInput}
-                onChange={(e) => { setBatchInput(e.target.value.replace(/^0x/, "")); setBatchError(""); }}
-                onKeyDown={async (e) => {
-                  if (e.key === "Enter" && batchInput.length === 64) {
-                    setBatchError("Validating...");
-                    swapChat.BatchID = batchInput;
-                    const signerKey = swapChat.SignerKey || localStorage.getItem("swapchat_signerKey") || "";
-                    if (signerKey) {
-                      swapChat.Swarm.useClientStamp(signerKey, batchInput, swapChat.StampDepth);
-                    }
-                    const valid = await swapChat.Swarm.validateStampBatch();
-                    if (valid) {
-                      localStorage.setItem("swapchat_batchId", batchInput);
-                      advanceSetup();
-                      setTimeout(() => focusTextbox(), 50);
-                    } else {
-                      setBatchError("Stamp batch is not valid or not usable");
-                    }
-                  } else if (e.key === "Enter" && batchInput.length > 0) {
-                    setBatchError("Batch ID must be 64 hex characters");
-                  }
-                }}
-                placeholder="64 character hex batch ID"
-                maxLength={64}
-                spellCheck={false}
-                autoComplete="off"
-              />
-            </div>
-            {batchError && <div className="Key-error">{batchError}</div>}
-            <div className="Terms-hint">{batchInput.length}/64 characters</div>
-          </div>
-        </div>
-      )}
       {showFullscreenQR && (
         <div
           className="QR-fullscreen"
@@ -839,6 +850,7 @@ const Chat = (props: any) => {
         </div>
       </div>
 
+      <input type="file" accept=".txt" ref={fileInputRef} style={{display:'none'}} onChange={handleStampFile} />
       <div className="Chat-controls">
         {theme === "tron" && <span className="Chat-prompt-easter-egg">:) </span>}
         <textarea
