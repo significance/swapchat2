@@ -1,5 +1,5 @@
 import { type Page, expect } from '@playwright/test';
-import { TEST_SIGNER_KEY, TEST_BATCH_ID } from './test-config';
+import { TEST_SIGNER_KEY, TEST_BATCH_ID, TEST_BOOK_TEXT } from './test-config';
 
 export class ChatPage {
   constructor(private page: Page) {}
@@ -16,13 +16,12 @@ export class ChatPage {
 
   async dismissOverlays() {
     // Set all required localStorage values to skip setup screens, then reload
-    const signerKey = TEST_SIGNER_KEY;
-    const batchId = TEST_BATCH_ID;
-    await this.page.evaluate(({ sk, bi }) => {
+    await this.page.evaluate(({ sk, bi, bt }) => {
       localStorage.setItem('didAcceptTerms', 'true');
       if (!localStorage.getItem('swapchat_signerKey')) localStorage.setItem('swapchat_signerKey', sk);
       if (!localStorage.getItem('swapchat_batchId')) localStorage.setItem('swapchat_batchId', bi);
-    }, { sk: signerKey, bi: batchId });
+      if (!localStorage.getItem('swapchat_bookOfStamps')) localStorage.setItem('swapchat_bookOfStamps', bt);
+    }, { sk: TEST_SIGNER_KEY, bi: TEST_BATCH_ID, bt: TEST_BOOK_TEXT });
     // Only reload if a setup screen is showing
     const setupScreen = this.page.locator('.Terms-screen');
     if (await setupScreen.isVisible().catch(() => false)) {

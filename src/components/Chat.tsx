@@ -125,8 +125,8 @@ const Chat = (props: any) => {
         localStorage.setItem("swapchat_batchId", book.batchId);
         localStorage.setItem("swapchat_bookOfStamps", text);
 
+        clearConversations();
         setStampsLoaded(true);
-        sendSysMessage(`Book of stamps loaded (${book.batchId.slice(0, 8)}\u2026). Use /code or /link to start a chat.`);
       } catch (err: any) {
         sendSysMessage(`Failed to load book of stamps: ${err.message}`);
       }
@@ -251,7 +251,9 @@ const Chat = (props: any) => {
     }
     if (message.indexOf("/help connect") === 0) {
       let helpMessages = [
-        "Scan the QR code above or send the link to the recipient device to connect.",
+        "Scan the QR code or send the link to connect.",
+        "Once connected, both sides see a 6-char verification code.",
+        "Compare this code out-of-band to confirm no one intercepted the link.",
         "Copy link: /copy link",
         "Copy code: /copy code",
       ];
@@ -673,7 +675,7 @@ const Chat = (props: any) => {
     return getComputedStyle(document.documentElement).getPropertyValue(prop).trim() || fallback;
   };
 
-  const generateQRCode = (link: string, width = 150, dark?: string, light?: string): Promise<string> => {
+  const generateQRCode = (link: string, width = 183, dark?: string, light?: string): Promise<string> => {
     return new Promise((resolve, reject) => {
       var opts = {
         errorCorrectionLevel: "L" as const,
@@ -790,13 +792,6 @@ const Chat = (props: any) => {
         {chatRole === "initiator" && !stampsLoaded && (
           <div>
             <div className="Chat-welcome">** Welcome to SWAPCHAT **</div>
-            <div className="Chat-code">
-              <div className="Chat-code-qr" style={{cursor: 'pointer'}} onClick={() => fileInputRef.current?.click()}>
-                <div style={{padding: '20px', textAlign: 'center', opacity: 0.7, fontSize: '0.85rem'}}>
-                  Type /stamps or click here to load a book of stamps
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
